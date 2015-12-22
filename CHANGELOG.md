@@ -6,3 +6,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial check in of benchmarking functionality.
 - Added Dockerfile support.
+- Added sane build system using Maven.

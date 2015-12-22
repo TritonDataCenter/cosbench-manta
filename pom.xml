@@ -33,27 +33,243 @@
         </developer>
     </developers>
 
+    <properties>
+        <java.min.version>1.8</java.min.version>
+        <maven.min.version>3.2</maven.min.version>
+        <checkstyle.skip>false</checkstyle.skip>
+        <!-- Plugin versions -->
+        <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+        <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
+        <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
+        <maven-extra-enforcer-rules.version>1.0-beta-4</maven-extra-enforcer-rules.version>
+        <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
+        <!-- Dependency versions -->
+        <dependency.checkstyle.version>6.12.1</dependency.checkstyle.version>
+        <dependency.java-manta.version>2.0.0</dependency.java-manta.version>
+        <dependency.slf4j-log4j12.version>1.7.7</dependency.slf4j-log4j12.version>
+        <dependency.osgi4.version>1.0</dependency.osgi4.version>
+        <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
+    </properties>
+
+    <repositories>
+        <!--other repositories if any-->
+        <repository>
+            <id>project.local</id>
+            <name>project</name>
+            <url>file:${project.basedir}/build-dependencies</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>1.0.0</version>
+            <groupId>com.intel.cosbench</groupId>
+            <artifactId>cosbench-api</artifactId>
+            <version>${dependency.cosbench.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.cosbench</groupId>
+            <artifactId>cosbench-config</artifactId>
+            <version>${dependency.cosbench.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.intel.cosbench</groupId>
+            <artifactId>cosbench-log</artifactId>
+            <version>${dependency.cosbench.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.joyent.manta</groupId>
+            <artifactId>java-manta-client</artifactId>
+            <version>${dependency.java-manta.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${dependency.slf4j-log4j12.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>LATEST</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+            <version>${dependency.osgi4.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
     <build>
+        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
+
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.min.version}</source>
+                    <target>${java.min.version}</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>${maven-bundle-plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>com.my.company.api</Export-Package>
-                        <Private-Package>com.my.company.*</Private-Package>
-                        <Bundle-Activator>com.my.company.Activator</Bundle-Activator>
+                        <Bundle-Name>Manta Storage Client Bundle</Bundle-Name>
+                        <Bundle-Vendor>Joyent</Bundle-Vendor>
+                        <Bundle-SymbolicName>cosbench-manta</Bundle-SymbolicName>
+                        <Bundle-Activator>com.intel.cosbench.api.manta.Activator</Bundle-Activator>
+                        <Private-Package>com.intel.cosbench.api.manta.config.*</Private-Package>
+                        <!-- We exclude log4j because it should be imported for us. -->
+                        <Embed-Dependency>*;scope=compile|runtime;artifactId=!log4j</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
+                        <Import-Package>*,com.intel.cosbench.api.auth,com.intel.cosbench.api.context,com.intel.cosbench.api.storage,com.intel.cosbench.config,org.apache.log4j</Import-Package>
+                        <Include-Resource>{maven-resources}</Include-Resource>
+                        <!--<Include-Resource>src/main/resources</Include-Resource>-->
+                        <!-- We intentionally don't include the JDK version here because
+                             the version of OSGI in which COSBench is running doesn't have
+                             a JDK 1.8 profile. -->
+                        <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE))"</Require-Capability>
                     </instructions>
                 </configuration>
+            </plugin>
+
+            <!-- Style check -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven-checkstyle-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${dependency.checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <skip>${checkstyle.skip}</skip>
+                    <suppressionsLocation>suppressions.xml</suppressionsLocation>
+                    <violationSeverity>warning</violationSeverity>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Enforcer rules -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven-enforcer-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[${maven.min.version},)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>enforce</id>
+                        <configuration>
+                            <rules>
+                                <dependencyConvergence />
+                            </rules>
+                        </configuration>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>enforce-bytecode-version</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <enforceBytecodeVersion>
+                                    <maxJdkVersion>${java.min.version}</maxJdkVersion>
+                                </enforceBytecodeVersion>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>enforce-ban-circular-dependencies</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <banCircularDependencies />
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>enforce-ban-duplicate-classes</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <banDuplicateClasses>
+                                    <findAllDuplicates>true</findAllDuplicates>
+                                </banDuplicateClasses>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>${maven-extra-enforcer-rules.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

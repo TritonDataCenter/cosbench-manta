@@ -1,5 +1,6 @@
 package com.intel.cosbench.api.manta;
 
+import com.intel.cosbench.api.manta.config.CosbenchMantaConfigContext;
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
@@ -19,28 +20,48 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Manta implementation of the COSBench {@link com.intel.cosbench.api.storage.StorageAPI}.
+ *
+ * @author <a href="https://github.com/dekobon">Elijah Zupancic</a>
+ */
 public class MantaStorage extends NoneStorage {
+    /**
+     * Hardcoded directory in Manta in which all benchmark files are stored.
+     */
     private static final String COSBENCH_BASE_DIR = "stor/cosbench";
+
+    /**
+     * Manta client driver.
+     */
     private MantaClient client;
+
+    /**
+     * The current test directory name.
+     */
     private String currentTestDirectory;
+
+    /**
+     * Flag indicating whether or not to send files using chunked encoding.
+     */
     private boolean chunked = false;
 
     @Override
-    public void init(Config config, Logger logger) {
+    public void init(final Config config, final Logger logger) {
         logger.debug("Manta client has started initialization");
         super.init(config, logger);
 
-        ChainedConfigContext context = new ChainedConfigContext(
+        final ChainedConfigContext context = new ChainedConfigContext(
                 new DefaultsConfigContext(),
                 new EnvVarConfigContext(),
                 new SystemSettingsConfigContext(),
                 new CosbenchMantaConfigContext(config));
 
         if (logger.isDebugEnabled()) {
-        	String msg = String.format("Configuration: [user=%s, key_path=%s, url=%s]",
-        			context.getMantaUser(), context.getMantaKeyPath(),
-        			context.getMantaURL());
-    		logger.debug(msg);
+            String msg = String.format("Configuration: [user=%s, key_path=%s, url=%s]",
+                context.getMantaUser(), context.getMantaKeyPath(),
+                context.getMantaURL());
+            logger.debug(msg);
         }
 
         try {
@@ -59,12 +80,12 @@ public class MantaStorage extends NoneStorage {
             client.putDirectory(currentTestDirectory, true);
 
             if (!client.existsAndIsAccessible(currentTestDirectory)) {
-            	String msg = "Unable to create base test directory";
-            	throw new StorageException(msg);
+                String msg = "Unable to create base test directory";
+                throw new StorageException(msg);
             }
 
         } catch (IOException e) {
-        	logger.error("Error in initialization", e);
+            logger.error("Error in initialization", e);
             throw new StorageException(e);
         }
 
@@ -72,19 +93,19 @@ public class MantaStorage extends NoneStorage {
     }
 
     @Override
-    public void createContainer(String container, Config config) {
+    public void createContainer(final String container, final Config config) {
         super.createContainer(container, config);
 
         try {
             client.putDirectory(directoryOfContainer(container));
         } catch (IOException e) {
-        	logger.error("Error creating container", e);
+            logger.error("Error creating container", e);
             throw new StorageException(e);
         }
     }
 
     @Override
-    public void deleteContainer(String container, Config config) {
+    public void deleteContainer(final String container, final Config config) {
         super.deleteContainer(container, config);
 
         try {
@@ -95,14 +116,17 @@ public class MantaStorage extends NoneStorage {
                 throw new StorageException(e);
             }
         } catch (IOException e) {
-        	logger.error("Error deleting container", e);
+            logger.error("Error deleting container", e);
             throw new StorageException(e);
         }
     }
 
     @Override
-    public void createObject(String container, String object, InputStream data,
-                             long length, Config config) {
+    public void createObject(final String container,
+                             final String object,
+                             final InputStream data,
+                             final long length,
+                             final Config config) {
         super.createObject(container, object, data, length, config);
 
         final String path = pathOfObject(container, object);
@@ -118,56 +142,60 @@ public class MantaStorage extends NoneStorage {
         } catch (MantaClientHttpResponseException e) {
             // This is a fall-back in the weird cases where COSBench doesn't
             // do things in the right order.
-        	if (e.getServerCode().equals(MantaErrorCode.DIRECTORY_DOES_NOT_EXIST_ERROR)) {
-        		try {
-        			String dir = directoryOfContainer(container);
-        			client.putDirectory(dir, true);
-        			client.put(path, data);
-        		} catch (IOException ioe) {
-        			throw new StorageException(ioe);
-        		}
-        	} else {
-        		throw new StorageException(e);
-        	}
+            if (e.getServerCode().equals(MantaErrorCode.DIRECTORY_DOES_NOT_EXIST_ERROR)) {
+                try {
+                    String dir = directoryOfContainer(container);
+                    client.putDirectory(dir, true);
+                    client.put(path, data);
+                } catch (IOException ioe) {
+                    throw new StorageException(ioe);
+                }
+            } else {
+                throw new StorageException(e);
+            }
         } catch (IOException e) {
-        	logger.error("Error error creating object", e);
-        	throw new StorageException(e);
+            logger.error("Error error creating object", e);
+            throw new StorageException(e);
         }
     }
 
     @Override
-    public void deleteObject(String container, String object, Config config) {
+    public void deleteObject(final String container, final String object,
+                             final Config config) {
         super.deleteObject(container, object, config);
 
         try {
             String path = pathOfObject(container, object);
             client.delete(path);
         } catch (MantaClientHttpResponseException e) {
-        	if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
+            if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
                 logger.error("Error error deleting object", e);
                 throw new StorageException(e);
             }
         } catch (IOException e) {
-        	logger.error("Error error deleting object", e);
+            logger.error("Error error deleting object", e);
             throw new StorageException(e);
         }
     }
 
     @Override
-    public InputStream getObject(String container, String object, Config config) {
+    public InputStream getObject(final String container, final String object, final Config config) {
         super.getObject(container, object, config);
 
         try {
             final String path = pathOfObject(container, object);
             return client.getAsInputStream(path);
         } catch (IOException e) {
-        	logger.error("Error error getting object", e);
+            logger.error("Error error getting object", e);
             throw new StorageException(e);
         }
     }
 
     @Override
-    protected void createMetadata(String container, String object, Map<String, String> map, Config config) {
+    protected void createMetadata(final String container,
+                                  final String object,
+                                  final Map<String, String> map,
+                                  final Config config) {
         super.createMetadata(container, object, map, config);
 
         try {
@@ -182,20 +210,22 @@ public class MantaStorage extends NoneStorage {
             MantaMetadata metadata = new MantaMetadata(prefixedMap);
             client.putMetadata(path, metadata);
         } catch (IOException e) {
-        	logger.error("Error error creating metadata", e);
+            logger.error("Error error creating metadata", e);
             throw new StorageException(e);
         }
     }
 
     @Override
-    protected Map<String, String> getMetadata(String container, String object, Config config) {
+    protected Map<String, String> getMetadata(final String container,
+                                              final String object,
+                                              final Config config) {
         super.getMetadata(container, object, config);
 
         try {
             String path = pathOfObject(container, object);
             return client.head(path).getMetadata();
         } catch (IOException e) {
-        	logger.error("Error error getting metadata", e);
+            logger.error("Error error getting metadata", e);
             throw new StorageException(e);
         }
     }
@@ -220,11 +250,22 @@ public class MantaStorage extends NoneStorage {
         super.abort();
     }
 
-    private String directoryOfContainer(String container) {
+    /**
+     * Utility method that provides the directory mapping of a container.
+     * @param container container name
+     * @return directory as string
+     */
+    private String directoryOfContainer(final String container) {
         return String.format("%s/%s", currentTestDirectory, container);
     }
 
-    private String pathOfObject(String container, String object) {
+    /**
+     * Utility method that provides the directory mapping of an object.
+     * @param container container name
+     * @param object object name
+     * @return full path to object as string
+     */
+    private String pathOfObject(final String container, final String object) {
         String dir = directoryOfContainer(container);
         return String.format("%s/%s", dir, object);
     }
