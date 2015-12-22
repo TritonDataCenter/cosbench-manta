@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/joyent/cosbench-manta.svg?branch=travis)](https://travis-ci.org/joyent/cosbench-manta)
+[![Build Status](https://travis-ci.org/joyent/cosbench-manta.svg?branch=master)](https://travis-ci.org/joyent/cosbench-manta)
 
 # COSBench Manta Adaptor
 
