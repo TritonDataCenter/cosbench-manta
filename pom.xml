@@ -33,6 +33,27 @@
         </developer>
     </developers>
 
+    <scm>
+        <connection>scm:git:git://github.com/joyent/cosbench-manta.git</connection>
+        <developerConnection>scm:git:git://github.com/joyent/cosbench-manta.git</developerConnection>
+        <url>git@github.com:joyent/cosbench-manta.git</url>
+        <tag>HEAD</tag>
+    </scm>
+    <issueManagement>
+        <system>github.com</system>
+        <url>https://github.com/joyent/cosbench-manta/issues</url>
+    </issueManagement>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <java.min.version>1.8</java.min.version>
         <maven.min.version>3.2</maven.min.version>
