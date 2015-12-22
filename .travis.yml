@@ -2,6 +2,8 @@ language: java
 sudo: false
 
 before_install:
+  - mkdir -p ~/.m2/repository
+  - cp -r build-dependencies/* ~/.m2/repository
   - echo 'MAVEN_OPTS="-Dorg.slf4j.simpleLogger.defaultLogLevel=warn"' >~/.mavenrc
 
 matrix:

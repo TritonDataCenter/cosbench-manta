@@ -3,7 +3,7 @@
 # COSBench Manta Adaptor
 
 This project provides an [adaptor](https://github.com/intel-cloud/cosbench/blob/master/COSBench-Adaptor-Dev-Guide.odt)
-for benchmarking []Joyent's object store](https://www.joyent.com/object-storage) [Manta](https://github.com/joyent/manta)
+for benchmarking [Joyent's object store](https://www.joyent.com/object-storage) [Manta](https://github.com/joyent/manta)
 using [COSBench](https://github.com/intel-cloud/cosbench/).
 
 ## Requirements
