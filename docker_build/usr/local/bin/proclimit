@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Just return the value from nproc if we are not on a Triton container
+if [ ! -d /native ]; then
+    nproc
+    exit 0
+fi
+
 ##
 # Returns a number representing a very conservative estimate of the maximum
 # number of processes or threads that you want to run within the zone that

@@ -20,7 +20,7 @@ RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-sel
 RUN apt-add-repository ppa:webupd8team/java && \
     apt-get -qq update && \
     apt-get -qy upgrade && \
-    apt-get install -y oracle-java${JAVA_MAJOR_VERSION}-installer patch unzip && \
+    apt-get install -y oracle-java${JAVA_MAJOR_VERSION}-installer patch unzip dc && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
@@ -50,9 +50,25 @@ RUN chmod +x /usr/local/bin/proclimit
 # the adapter.
 COPY docker_build/patches /patches
 
-# Adding sample Manta configuration
-COPY conf/* /opt/cosbench/conf
+# Adding sample Manta configuration and init files
+COPY docker_build/opt/cosbench /opt/cosbench
 
 # Patch Cosbench for use with the Manta adaptor
 RUN patch -p0 < /patches/manta_enabled.patch
 
+# Setup Tomcat user to run COSBench process
+RUN groupadd -g 120 tomcat && \
+    useradd -g 120 -u 120 -c 'Tomcat User' -d /opt/cosbench -r -s /bin/false tomcat && \
+    mkdir /opt/cosbench/.ssh && \
+    chown -R tomcat:tomcat /opt/cosbench
+
+# Remove this
+COPY target/cosbench-manta-1.0.1-SNAPSHOT.jar /opt/cosbench/osgi/plugins/cosbench-manta.jar
+
+# Run the container using the tomcat user by default
+USER tomcat
+
+# COSBench driver port
+EXPOSE 18088
+# COSBench controller port
+EXPOSE 19088
