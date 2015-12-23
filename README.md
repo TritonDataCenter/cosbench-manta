@@ -146,7 +146,7 @@ the primary repo separately, but this may be preferred anyway.
 
 ### Bugs
 
-See <https://github.com/joyent/manta-cosbench/issues>.
+See <https://github.com/joyent/cosbench-manta/issues>.
 
 ## License
 
