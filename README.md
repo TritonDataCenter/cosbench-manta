@@ -28,14 +28,16 @@ Sample COSBench job configuration files are available in the `./conf` directory.
 
 ## Docker
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
-when you run the project's [Docker](https://www.docker.com/) image.
+when you run the project's [Docker](https://www.docker.com/) image:
+[`dekobon/cosbench-manta`](https://hub.docker.com/r/dekobon/cosbench-manta/).
 
 Using Docker on your local machine you can log into a COSBench system setup for
 Manta by doing:
 
 ```
-# Adjust the key paths if needed
-docker run -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
+# Adjust the key paths if needed and be sure to specify your own MANTA_USER
+docker run --name=cosbench \
+           -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
            -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa)" \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
@@ -43,17 +45,44 @@ docker run -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
            -it dekobon/cosbench-manta:latest bash
 ```
 
+Using Triton on the Joyent public cloud you can log into a COSBench system setup for
+Manta by doing:
+```
+# Adjust the key paths if needed and be sure to specify your own MANTA_USER
+# This will create a container with a 8gb memory package size and size the
+# JVM to fit within that range
+docker run --name=cosbench \
+           -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
+           -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa)" \
+           -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
+           -e MANTA_USER=username \
+           -e "JAVA_OPTS=-Xmx3800m" \
+           -m 8g \
+           -p 18088:18088 -p 19088:19088 \
+           -it dekobon/cosbench-manta:latest bash
+```
+
+Note: you will **need** to specify the Manta environment variables in order for
+the Manta adaptor to work correctly. You can override or add to the configuration
+within the workload configuration, but you can't embed public nor private keys
+in that configuration, so you will ultimately have to set some of these environment
+variables.
+
 Using this configuration you will be able to run the COSBench startup script by:
 ```
 cd /opt/cosbench
 sh ./start-all.sh
+
+# If I am on Triton, it would be useful to note the public IP address
+ifconfig
+
 # When I want to shut down:
 sh ./stop-all.sh
 ```
 
-Then you will be able to go to the [driver control panel](http://localhost:18088/driver/index.html) or the
-more useful [controller control panel](http://localhost:19088/controller/). From
-the controller control panel, you can run a benchmark by submitting a new workload.
+Then you will be able to go to the driver control panel ([http://server:18088/driver/index.html](http://localhost:18088/driver/index.html)) or the
+more useful controller control panel ([http://server:19088/controller/](http://localhost:19088/controller/)).
+From the controller control panel, you can run a benchmark by submitting a new workload.
 The workload configuration `opt/cosbench/conf/manta-config.xml` is a good
 example to get started with.
 
