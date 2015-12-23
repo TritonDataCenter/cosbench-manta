@@ -62,9 +62,6 @@ RUN groupadd -g 120 tomcat && \
     mkdir /opt/cosbench/.ssh && \
     chown -R tomcat:tomcat /opt/cosbench
 
-# Remove this
-COPY target/cosbench-manta-1.0.1-SNAPSHOT.jar /opt/cosbench/osgi/plugins/cosbench-manta.jar
-
 # Run the container using the tomcat user by default
 USER tomcat
 
