@@ -24,7 +24,7 @@ can drop into the COSBench `osgi/plugins`` directory.
 
 ## Configuration
 
-Sample COSBench job configuration files are available in the `./conf` directory.
+Sample COSBench job configuration files are available in the `./docker_buikd/opt/cosbench/conf` directory.
 
 ## Docker
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
