@@ -10,8 +10,8 @@ MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 ENV JAVA_MAJOR_VERSION 8
 ENV COSBENCH_VERSION 0.4.1.0
 ENV COSBENCH_CHECKSUM a044cd232b3cc376802aa6a4a697988ec690a8b1d70040641710066acd322c5a
-ENV COSBENCH_MANTA_VERSION 1.0.0
-ENV COSBENCH_MANTA_CHECKSUM 021171693b86631d941706cd2275688c465268902b73c1515a09bcf5ae3613ed
+ENV COSBENCH_MANTA_VERSION 1.0.1
+ENV COSBENCH_MANTA_CHECKSUM 01aee2bbf02fe95c1bb8f1d6dc88aff6ef4b29f16836d4a5dc06d29c2fe41805
 
 # Setup the (Oracle) JVM and install needed utilities
 RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
@@ -31,14 +31,14 @@ RUN apt-add-repository ppa:webupd8team/java && \
            /usr/lib/jvm/java-${JAVA_MAJOR_VERSION}-oracle/javafx-src.zip
 
 # Download and install Cosbench
-RUN curl -Ls "https://github.com/intel-cloud/cosbench/releases/download/v${COSBENCH_VERSION}/${COSBENCH_VERSION}.zip" > /tmp/cosbench.zip && \
+RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/download/v${COSBENCH_VERSION}/${COSBENCH_VERSION}.zip" > /tmp/cosbench.zip && \
     echo "${COSBENCH_CHECKSUM}  /tmp/cosbench.zip" | sha256sum -c && \
     unzip -q /tmp/cosbench.zip -d /opt/ && \
     mv "/opt/${COSBENCH_VERSION}" /opt/cosbench && \
     rm /tmp/cosbench.zip
 
 # Download and install the Manta adaptor
-RUN curl -Ls "https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar" > /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
+RUN curl --retry 6 -Ls "https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar" > /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
     echo "${COSBENCH_MANTA_CHECKSUM}  /opt/cosbench/osgi/plugins/cosbench-manta.jar" | sha256sum -c
 
 # Adding machine sizing utility useful when on Triton

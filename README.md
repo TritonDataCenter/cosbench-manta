@@ -30,6 +30,33 @@ Sample COSBench job configuration files are available in the `./conf` directory.
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
 when you run the project's [Docker](https://www.docker.com/) image.
 
+Using Docker on your local machine you can log into a COSBench system setup for
+Manta by doing:
+
+```
+# Adjust the key paths if needed
+docker run -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
+           -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa)" \
+           -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
+           -e MANTA_USER=username \
+           -p 18088:18088 -p 19088:19088 \
+           -it dekobon/cosbench-manta:latest bash
+```
+
+Using this configuration you will be able to run the COSBench startup script by:
+```
+cd /opt/cosbench
+sh ./start-all.sh
+# When I want to shut down:
+sh ./stop-all.sh
+```
+
+Then you will be able to go to the [driver control panel](http://localhost:18088/driver/index.html) or the
+more useful [controller control panel](http://localhost:19088/controller/). From
+the controller control panel, you can run a benchmark by submitting a new workload.
+The workload configuration `opt/cosbench/conf/manta-config.xml` is a good
+example to get started with.
+
 ## Contributions
 
 Contributions welcome! Please ensure that `# mvn checkstyle:checkstyle -Dcheckstyle.skip=false` runs
