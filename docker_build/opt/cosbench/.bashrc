@@ -38,7 +38,7 @@ if [ -d /native ]; then
     HW_THREADS=$(/usr/local/bin/proclimit)
 
     if [ $HW_THREADS -le 8 ]; then
-        GC_THREADS=$HW_THREADS
+        GC_THREADS=$(echo "8k $HW_THREADS 2 + pq" | dc)
     else
         # ParallelGCThreads = (ncpus <= 8) ? ncpus : 3 + ((ncpus * 5) / 8)
         ADJUSTED=$(echo "8k $HW_THREADS 5 * pq" | dc)
