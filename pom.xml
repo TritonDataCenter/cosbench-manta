@@ -109,21 +109,18 @@
             <artifactId>cosbench-api</artifactId>
             <version>${dependency.cosbench.version}</version>
             <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.intel.cosbench</groupId>
             <artifactId>cosbench-config</artifactId>
             <version>${dependency.cosbench.version}</version>
             <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.intel.cosbench</groupId>
             <artifactId>cosbench-log</artifactId>
             <version>${dependency.cosbench.version}</version>
             <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -146,7 +143,7 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>[1.0.0,2.0.0)</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -175,7 +172,6 @@
                         <!-- We exclude log4j because it should be imported for us. -->
                         <Embed-Dependency>*;scope=compile|runtime;artifactId=!log4j</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
-                        <Import-Package>*,com.intel.cosbench.api.auth,com.intel.cosbench.api.context,com.intel.cosbench.api.storage,com.intel.cosbench.config,org.apache.log4j</Import-Package>
                         <Include-Resource>{maven-resources}</Include-Resource>
                         <!--<Include-Resource>src/main/resources</Include-Resource>-->
                         <!-- We intentionally don't include the JDK version here because
