@@ -1,4 +1,4 @@
-package com.intel.cosbench.api.manta;
+package com.joyent.manta.cosbench;
 
 import com.intel.cosbench.log.LogFactory;
 import org.osgi.framework.BundleActivator;

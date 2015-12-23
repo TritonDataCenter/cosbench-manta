@@ -1,6 +1,6 @@
-package com.intel.cosbench.api.manta;
+package com.joyent.manta.cosbench;
 
-import com.intel.cosbench.api.manta.config.CosbenchMantaConfigContext;
+import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;

@@ -1,4 +1,4 @@
-package com.intel.cosbench.api.manta;
+package com.joyent.manta.cosbench;
 
 import com.intel.cosbench.api.storage.StorageAPI;
 import com.intel.cosbench.api.storage.StorageAPIFactory;

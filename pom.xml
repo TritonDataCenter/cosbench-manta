@@ -170,8 +170,8 @@
                         <Bundle-Name>Manta Storage Client Bundle</Bundle-Name>
                         <Bundle-Vendor>Joyent</Bundle-Vendor>
                         <Bundle-SymbolicName>cosbench-manta</Bundle-SymbolicName>
-                        <Bundle-Activator>com.intel.cosbench.api.manta.Activator</Bundle-Activator>
-                        <Private-Package>com.intel.cosbench.api.manta.config.*</Private-Package>
+                        <Bundle-Activator>com.joyent.manta.cosbench.Activator</Bundle-Activator>
+                        <Private-Package>com.joyent.manta.cosbench.config.*</Private-Package>
                         <!-- We exclude log4j because it should be imported for us. -->
                         <Embed-Dependency>*;scope=compile|runtime;artifactId=!log4j</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

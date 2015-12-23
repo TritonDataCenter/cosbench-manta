@@ -1,4 +1,4 @@
-package com.intel.cosbench.api.manta.config;
+package com.joyent.manta.cosbench.config;
 
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
