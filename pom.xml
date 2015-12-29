@@ -4,7 +4,7 @@
 
     <groupId>com.joyent.manta</groupId>
     <artifactId>cosbench-manta</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>bundle</packaging>
 
     <name>cosbench-manta</name>
@@ -37,7 +37,7 @@
         <connection>scm:git:git://github.com/joyent/cosbench-manta.git</connection>
         <developerConnection>scm:git:git://github.com/joyent/cosbench-manta.git</developerConnection>
         <url>git@github.com:joyent/cosbench-manta.git</url>
-        <tag>HEAD</tag>
+        <tag>cosbench-manta-1.0.2</tag>
     </scm>
     <issueManagement>
         <system>github.com</system>
