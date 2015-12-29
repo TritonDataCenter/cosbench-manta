@@ -1,6 +1,5 @@
 package com.joyent.manta.cosbench;
 
-import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
@@ -11,7 +10,9 @@ import com.joyent.manta.client.MantaMetadata;
 import com.joyent.manta.config.ChainedConfigContext;
 import com.joyent.manta.config.DefaultsConfigContext;
 import com.joyent.manta.config.EnvVarConfigContext;
+import com.joyent.manta.config.StandardConfigContext;
 import com.joyent.manta.config.SystemSettingsConfigContext;
+import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 
@@ -30,6 +31,12 @@ public class MantaStorage extends NoneStorage {
      * Hardcoded directory in Manta in which all benchmark files are stored.
      */
     private static final String COSBENCH_BASE_DIR = "stor/cosbench";
+
+    /**
+     * The default number of maximum HTTP connections at one time to the
+     * Manta API.
+     */
+    private static final int MAX_CONNECTIONS = 1024;
 
     /**
      * Manta client driver.
@@ -51,8 +58,14 @@ public class MantaStorage extends NoneStorage {
         logger.debug("Manta client has started initialization");
         super.init(config, logger);
 
+        // We change the default number of connections to something more
+        // fitting for COSBench.
+        StandardConfigContext defaults = new StandardConfigContext();
+        defaults.overwriteWithContext(new DefaultsConfigContext());
+        defaults.setMaximumConnections(MAX_CONNECTIONS);
+
         final ChainedConfigContext context = new ChainedConfigContext(
-                new DefaultsConfigContext(),
+                defaults,
                 new EnvVarConfigContext(),
                 new SystemSettingsConfigContext(),
                 new CosbenchMantaConfigContext(config));

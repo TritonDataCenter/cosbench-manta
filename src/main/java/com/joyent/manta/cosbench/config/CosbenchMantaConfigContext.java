@@ -74,8 +74,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     @Override
     public String getPrivateKeyContent() {
-        // We don't support embedded key content with COSBench
-        return null;
+        try {
+            return config.get("private_key");
+        } catch (RuntimeException e) {
+            logger.trace("Couldn't get private_key from COSBench config");
+            return null;
+        }
     }
 
     @Override
@@ -98,6 +102,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public Integer getRetries() {
         return safeGetInteger(
                 "retries", "Couldn't get retries from COSBench config");
+    }
+
+    @Override
+    public Integer getMaximumConnections() {
+        return safeGetInteger(
+                "max_connections", "Couldn't get maximum connections from COSBench config");
     }
 
     /**

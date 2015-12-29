@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.2] - 2015-12-22
+### Changed
+- Updated Manta client library to 2.1.0 so that we can set maximum connections.
+- We now allow setting the private key in the COSBench configuration.
+
 ## [1.0.1] - 2015-12-22
 ### Fixed
 - Fixed OSGI import package scoping issue
