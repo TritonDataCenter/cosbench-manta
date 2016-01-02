@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.3] - 2016-01-02
+### Changed
+- Updated Manta client library to 2.2.0.
+- We now support all of the new configuration options in java-manta 2.2.0.
+
 ## [1.0.2] - 2015-12-22
 ### Changed
 - Updated Manta client library to 2.1.0 so that we can set maximum connections.
