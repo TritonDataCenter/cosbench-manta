@@ -51,7 +51,12 @@ public class MantaStorage extends NoneStorage {
     /**
      * Flag indicating whether or not to send files using chunked encoding.
      */
-    private boolean chunked = false;
+    private Boolean chunked;
+
+    /**
+     * Number of copies of object to store.
+     */
+    private Integer durabilityLevel;
 
     @Override
     public void init(final Config config, final Logger logger) {
@@ -64,11 +69,13 @@ public class MantaStorage extends NoneStorage {
         defaults.overwriteWithContext(new DefaultsConfigContext());
         defaults.setMaximumConnections(MAX_CONNECTIONS);
 
+        final CosbenchMantaConfigContext cosbenchConfig =
+                new CosbenchMantaConfigContext(config);
         final ChainedConfigContext context = new ChainedConfigContext(
                 defaults,
                 new EnvVarConfigContext(),
                 new SystemSettingsConfigContext(),
-                new CosbenchMantaConfigContext(config));
+                cosbenchConfig);
 
         if (logger.isDebugEnabled()) {
             String msg = String.format("Configuration: [user=%s, key_path=%s, url=%s]",
@@ -77,11 +84,8 @@ public class MantaStorage extends NoneStorage {
             logger.debug(msg);
         }
 
-        try {
-            this.chunked = config.getBoolean("chunked");
-        } catch (RuntimeException e) {
-            logger.warn("Couldn't get value of chunked configuration setting");
-        }
+        this.chunked = cosbenchConfig.useChunking();
+        this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
 
         try {
             client = new MantaClient(context);
@@ -147,8 +151,12 @@ public class MantaStorage extends NoneStorage {
         try {
             MantaHttpHeaders headers = new MantaHttpHeaders();
 
-            if (chunked) {
+            if (chunked != null && chunked) {
                 headers.setContentEncoding("chunked");
+            }
+
+            if (durabilityLevel != null) {
+                headers.setDurabilityLevel(durabilityLevel);
             }
 
             client.put(path, data, headers);

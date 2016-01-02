@@ -20,7 +20,7 @@ RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-sel
 RUN apt-add-repository ppa:webupd8team/java && \
     apt-get -qq update && \
     apt-get -qy upgrade && \
-    apt-get install -y oracle-java${JAVA_MAJOR_VERSION}-installer patch unzip dc && \
+    apt-get install -y oracle-java${JAVA_MAJOR_VERSION}-installer patch unzip dc htop && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
