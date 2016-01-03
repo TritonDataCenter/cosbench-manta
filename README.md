@@ -26,7 +26,11 @@ can drop into the COSBench `osgi/plugins`` directory.
 
 Sample COSBench job configuration files are available in the `./docker_buikd/opt/cosbench/conf` directory.
 
-You can specify any of the system properties used in the [Java Manta driver|https://github.com/joyent/java-manta]
+You can configure the COSBench parameters using environment variables, java system properties or directly in the
+workload configuration file. See the [Java Manta driver](https://github.com/joyent/java-manta) documentation for
+details.
+
+You can specify any of the system properties used in the [Java Manta driver](https://github.com/joyent/java-manta)
 in the config element of the workload configuration. In addition to those properties you can also specify a few more.
 
 *Java Manta Properties*
