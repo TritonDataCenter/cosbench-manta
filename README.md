@@ -26,6 +26,42 @@ can drop into the COSBench `osgi/plugins`` directory.
 
 Sample COSBench job configuration files are available in the `./docker_buikd/opt/cosbench/conf` directory.
 
+You can specify any of the system properties used in the [Java Manta driver|https://github.com/joyent/java-manta]
+in the config element of the workload configuration. In addition to those properties you can also specify a few more.
+
+*Java Manta Properties*
+
+| Default                              | System Property           |
+|--------------------------------------|---------------------------|
+| https://us-east.manta.joyent.com:443 | manta.url                 |
+|                                      | manta.user                |
+|                                      | manta.key_id              |
+|                                      | manta.key_path            |
+|                                      | manta.key_content         |
+|                                      | manta.password            |
+| 20000                                | manta.timeout             |
+| 3 (6 for integration tests)          | manta.retries             |
+| 24                                   | manta.max_connections     |
+| ApacheHttpTransport                  | manta.http_transport      |
+| TLSv1.2                              | https.protocols           |
+| <see java-manta code>                | https.cipherSuites        |
+| false                                | manta.no_auth             |
+| false                                | http.signature.native.rsa |
+| 0                                    | http.signature.cache.ttl  |
+
+*COSBench Properties*
+
+| Default                              | System Property           |
+|--------------------------------------|---------------------------|
+| 2                                    | durability-level          |
+| false                                | chunked                   |
+
+For benchmarking purposes, changing `chunked`, `durability-level`, `http.signature.native.rsa`, 
+`http.signature.cache.ttl`, `manta.http_transport` or `https.cipherSuites` can have an impact on
+overall performance. In particular, experimenting with enabling `http.signature.cache.ttl` may
+result in higher overall throughput but it may result in a higher error rate. This is why it is
+turned off by default.
+
 ## Docker
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
 when you run the project's [Docker](https://www.docker.com/) image:
