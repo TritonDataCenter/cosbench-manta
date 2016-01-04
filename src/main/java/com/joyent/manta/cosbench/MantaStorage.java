@@ -115,9 +115,8 @@ public class MantaStorage extends NoneStorage {
 
         try {
             client.putDirectory(directoryOfContainer(container));
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error creating container", e);
-            throw new StorageException(e);
         }
     }
 
@@ -132,7 +131,7 @@ public class MantaStorage extends NoneStorage {
                 logger.error("Error error deleting object", e);
                 throw new StorageException(e);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error deleting container", e);
             throw new StorageException(e);
         }
@@ -174,7 +173,7 @@ public class MantaStorage extends NoneStorage {
             } else {
                 throw new StorageException(e);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error error creating object", e);
             throw new StorageException(e);
         }
@@ -193,7 +192,7 @@ public class MantaStorage extends NoneStorage {
                 logger.error("Error error deleting object", e);
                 throw new StorageException(e);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error error deleting object", e);
             throw new StorageException(e);
         }
@@ -206,7 +205,7 @@ public class MantaStorage extends NoneStorage {
         try {
             final String path = pathOfObject(container, object);
             return client.getAsInputStream(path);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error error getting object", e);
             throw new StorageException(e);
         }
@@ -230,7 +229,7 @@ public class MantaStorage extends NoneStorage {
 
             MantaMetadata metadata = new MantaMetadata(prefixedMap);
             client.putMetadata(path, metadata);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error error creating metadata", e);
             throw new StorageException(e);
         }
@@ -245,7 +244,7 @@ public class MantaStorage extends NoneStorage {
         try {
             String path = pathOfObject(container, object);
             return client.head(path).getMetadata();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error error getting metadata", e);
             throw new StorageException(e);
         }
