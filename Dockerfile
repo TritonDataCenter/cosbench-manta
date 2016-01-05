@@ -10,8 +10,8 @@ MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 ENV JAVA_MAJOR_VERSION 8
 ENV COSBENCH_VERSION 0.4.1.0
 ENV COSBENCH_CHECKSUM a044cd232b3cc376802aa6a4a697988ec690a8b1d70040641710066acd322c5a
-ENV COSBENCH_MANTA_VERSION 1.0.3
-ENV COSBENCH_MANTA_CHECKSUM c3c220f0e1becaf9168cd2574da8ab92230ef46963c1503134bf918392ddfaf3
+ENV COSBENCH_MANTA_VERSION 1.0.4
+ENV COSBENCH_MANTA_CHECKSUM 1be9618fd9c00452c745d21b6fcc9d2118d9ed96a153a31bd68516cac68ebf0e
 
 # Setup the (Oracle) JVM and install needed utilities
 RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
