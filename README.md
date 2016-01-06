@@ -50,7 +50,7 @@ in the config element of the workload configuration. In addition to those proper
 | TLSv1.2                              | https.protocols           |
 | <see java-manta code>                | https.cipherSuites        |
 | false                                | manta.no_auth             |
-| false                                | http.signature.native.rsa |
+| false                                | manta.disable_native_sigs |
 | 0                                    | http.signature.cache.ttl  |
 
 *COSBench Properties*
