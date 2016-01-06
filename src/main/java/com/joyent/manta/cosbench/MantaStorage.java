@@ -77,15 +77,10 @@ public class MantaStorage extends NoneStorage {
                 new SystemSettingsConfigContext(),
                 cosbenchConfig);
 
-        if (logger.isDebugEnabled()) {
-            String msg = String.format("Configuration: [user=%s, key_path=%s, url=%s]",
-                context.getMantaUser(), context.getMantaKeyPath(),
-                context.getMantaURL());
-            logger.debug(msg);
-        }
-
         this.chunked = cosbenchConfig.useChunking();
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
+
+        logger.info(String.format("Client configuration: %s", context));
 
         try {
             client = new MantaClient(context);

@@ -196,4 +196,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public String getMantaHomeDirectory() {
         return ConfigContext.deriveHomeDirectoryFromUser(getMantaUser());
     }
+
+    @Override
+    public String toString() {
+        return ConfigContext.toString(this);
+    }
 }
