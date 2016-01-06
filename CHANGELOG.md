@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.5] - ?
+### Changed
+ - Upgraded Java Manta driver library. Fixes multi-threaded issues with HTTP signing.
+
 ## [1.0.4] - 2016-01-03
 ### Changed
  - Changed from IOException to Exception traps.
