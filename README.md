@@ -7,7 +7,7 @@ for benchmarking [Joyent's object store](https://www.joyent.com/object-storage) 
 using [COSBench](https://github.com/intel-cloud/cosbench/).
 
 ## Requirements
-* [COSBench 0.4.1.0](https://github.com/intel-cloud/cosbench/releases/tag/v0.4.1.0)
+* [COSBench 0.4.1.0 or later](https://github.com/intel-cloud/cosbench/releases/tag/v0.4.1.0)
 * [Java 1.8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or higher.
 * [Maven 3.3.x](https://maven.apache.org/)
 
