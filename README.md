@@ -92,14 +92,16 @@ Manta by doing:
 # This will create a container with a 8gb memory package size and size the
 # JVM to fit within that range
 docker run --name=cosbench \
+           -d \
            -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
            -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa)" \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
-           -e "JAVA_OPTS=-Xmx3800m" \
+           -e "JAVA_OPTS=-Xmx7500m" \
            -m 8g \
            -p 18088:18088 -p 19088:19088 \
-           -it dekobon/cosbench-manta:latest bash
+           --restart=always \
+           -it dekobon/cosbench-manta:latest sleep infinity          
 ```
 
 Note: you will **need** to specify the Manta environment variables in order for
