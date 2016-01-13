@@ -59,7 +59,7 @@ RUN patch -p0 < /patches/manta_enabled.patch
 
 # Setup Tomcat user to run COSBench process
 RUN groupadd -g 120 tomcat && \
-    useradd -g 120 -u 120 -c 'Tomcat User' -d /opt/cosbench -r -s /bin/false tomcat && \
+    useradd -g 120 -G sudo -u 120 -c 'Tomcat User' -d /opt/cosbench -r -s /bin/false tomcat && \
     mkdir /opt/cosbench/.ssh && \
     chown -R tomcat:tomcat /opt/cosbench
 
