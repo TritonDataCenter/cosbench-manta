@@ -168,11 +168,12 @@
                         <Bundle-Vendor>Joyent</Bundle-Vendor>
                         <Bundle-SymbolicName>cosbench-manta</Bundle-SymbolicName>
                         <Bundle-Activator>com.joyent.manta.cosbench.Activator</Bundle-Activator>
-                        <Private-Package>com.joyent.manta.cosbench.config.*</Private-Package>
+                        <Private-Package>com.joyent.manta.cosbench.*</Private-Package>
                         <!-- We exclude log4j because it should be imported for us. -->
                         <Embed-Dependency>*;scope=compile|runtime;artifactId=!log4j</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Include-Resource>{maven-resources}</Include-Resource>
+                        <_exportcontents>com.joyent.manta.config</_exportcontents>
                         <!--<Include-Resource>src/main/resources</Include-Resource>-->
                         <!-- We intentionally don't include the JDK version here because
                              the version of OSGI in which COSBench is running doesn't have
