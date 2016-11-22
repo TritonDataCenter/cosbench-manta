@@ -12,6 +12,8 @@ ENV COSBENCH_MANTA_VERSION 1.0.7
 ENV COSBENCH_MANTA_CHECKSUM 3c205a288f4726f44f536c888f3b8bd13ccf54fb282e43dc5f3c8ab90decc23a
 ENV CONTAINERPILOT_VER 2.4.4
 ENV CONTAINERPILOT file:///etc/containerpilot.json
+ENV OSGI_CONSOLE_PORT_DRIVER 18089
+ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
 ENV MODE unknown
 
 # Installed tools:
@@ -108,6 +110,4 @@ EXPOSE 19088
 
 WORKDIR /opt/cosbench
 
-#/usr/local/bin/containerpilot /opt/cosbench/start-tomcat.sh
-
-CMD [ "/usr/local/bin/containerpilot", "/opt/cosbench/start-tomcat.sh" ]
+CMD [ "/usr/local/bin/containerpilot", "/opt/cosbench/autopilot-start-tomcat.sh" ]

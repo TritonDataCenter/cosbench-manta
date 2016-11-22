@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #Copyright 2013 Intel Corporation, All Rights Reserved.
 #
@@ -16,14 +16,11 @@
 #
 
 #-------------------------------
-# COSBENCH CONTROLLER STARTER
+# COSBENCH CONTROLLER STOPPER
 #-------------------------------
 
 SERVICE_NAME=controller
-VERSION=`cat VERSION`
 
-OSGI_BUNDLES="cosbench-log_${VERSION} cosbench-tomcat_${VERSION} cosbench-config_${VERSION} cosbench-core_${VERSION} cosbench-core-web_${VERSION} cosbench-controller_${VERSION} cosbench-controller-web_${VERSION}"
+OSGI_CONSOLE_PORT=$OSGI_CONSOLE_PORT_CONTROLLER
 
-OSGI_CONSOLE_PORT=18089
-
-bash cosbench-start.sh $SERVICE_NAME "$OSGI_BUNDLES" $OSGI_CONSOLE_PORT
+bash autopilot-cosbench-stop.sh $SERVICE_NAME $OSGI_CONSOLE_PORT

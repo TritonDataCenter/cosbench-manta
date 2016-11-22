@@ -1,7 +1,7 @@
 {
   "consul": "{{ if .CONSUL_AGENT }}localhost{{ else }}{{ if .CONSUL }}{{ .CONSUL }}{{ else }}consul{{ end }}{{ end }}:8500",
   "logging": {"level": "DEBUG"},
-  "preStop": "/opt/cosbench/stop-{{ .MODE }}.sh",
+  "preStop": "/opt/cosbench/autopilot-stop-{{ .MODE }}.sh",
   "services": [
     {
       "name": "cosbench-{{ .MODE }}",
@@ -17,7 +17,7 @@
     {
       "name": "cosbench-driver",
       "poll": 7,
-      "onChange": "/opt/cosbench/reload-controller.sh"
+      "onChange": "/opt/cosbench/autopilot-reload-controller.sh"
     }
   ],
   {{ end }}
@@ -33,7 +33,7 @@
       "restarts": "unlimited"
     },{{ end }}
     {
-      "command": ["/opt/cosbench/start-{{ .MODE }}.sh"],
+      "command": ["/opt/cosbench/autopilot-start-{{ .MODE }}.sh"],
       "restarts": "never"
     }
   ]

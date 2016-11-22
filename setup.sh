@@ -97,7 +97,11 @@ check() {
         exit 1
     fi
 
-    echo CONSUL=consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com > _env
+    if [ -n "$(grep '^CONSUL=' _env)" ]; then
+       sed -i "s/CONSUL=.*/CONSUL=consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com/g" _env
+    else
+       echo CONSUL=consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
+    fi
 }
 
 # ---------------------------------------------------

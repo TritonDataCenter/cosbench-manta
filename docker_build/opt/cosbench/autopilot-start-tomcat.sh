@@ -29,10 +29,16 @@ else
     TOMCAT_OPTS=""
 fi
 
+if [ "$MODE" == "driver" ]; then
+    OSGI_PORT=$OSGI_CONSOLE_PORT_DRIVER
+elif [ "$MODE" == "controller" ]; then
+    OSGI_PORT=$OSGI_CONSOLE_PORT_CONTROLLER
+fi
+
 exec /usr/bin/java \
     ${TOMCAT_OPTS} \
     -Dcosbench.tomcat.config=conf/$MODE-tomcat-server.xml \
     -server \
     -cp main/* org.eclipse.equinox.launcher.Main \
     -configuration conf/.$MODE \
-    -console 18089
+    -console $OSGI_PORT

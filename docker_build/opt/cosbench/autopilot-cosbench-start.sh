@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #Copyright 2013 Intel Corporation, All Rights Reserved.
 #
@@ -38,17 +38,20 @@ TOOL_PARAMS="-q 1"
 # MAIN
 #-------------------------------
 
-rm -f $BOOT_LOG
-mkdir -p log
+#rm -f $BOOT_LOG
+#mkdir -p log
 
 echo "Launching osgi framwork ... "
 
-/usr/bin/nohup java -Dcosbench.tomcat.config=$TOMCAT_CONFIG -server -cp main/* org.eclipse.equinox.launcher.Main -configuration $OSGI_CONFIG -console $OSGI_CONSOLE_PORT 1> $BOOT_LOG 2>&1 &
+# Tomcat is now being managed by ContainerPilot
+if [ -n "$(pgrep java)" ]; then
+    /usr/bin/nohup java -Dcosbench.tomcat.config=$TOMCAT_CONFIG -server -cp main/* org.eclipse.equinox.launcher.Main -configuration $OSGI_CONFIG -console $OSGI_CONSOLE_PORT 1> $BOOT_LOG 2>&1 &
+fi
 
 if [ $? -ne 0 ];
 then
         echo "Error in launching osgi framework!"
-        cat $BOOT_LOG
+        #cat $BOOT_LOG
         exit 1
 fi
 
@@ -111,6 +114,6 @@ elif [ $succ -eq 1 ]; then
 	echo "Successfully started cosbench $SERVICE_NAME!"
 fi
 
-cat $BOOT_LOG
+#cat $BOOT_LOG
 
 exit 0
