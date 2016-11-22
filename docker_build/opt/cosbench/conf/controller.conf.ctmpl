@@ -1,5 +1,6 @@
 {{ $backend := "cosbench-driver" }}
 [controller]
+name = COSBench on Autopilot
 drivers = {{ len (service $backend) }}
 log_level = INFO
 log_file = log/system.log
