@@ -1,0 +1,25 @@
+cosbench-driver:
+    extends:
+        file: docker-compose.yml
+        service: cosbench-driver
+    environment:
+        - CONSUL=consul
+        - CONSUL_AGENT=1
+    links:
+        - consul:consul
+cosbench-controller:
+    extends:
+        file: docker-compose.yml
+        service: cosbench-controller
+    environment:
+        - CONSUL=consul
+        - CONSUL_AGENT=1
+    links:
+        - consul:consul
+        - cosbench-driver
+consul:
+    extends:
+        file: docker-compose.yml
+        service: consul
+    ports:
+        - 8500:8500

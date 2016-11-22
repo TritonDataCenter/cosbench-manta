@@ -1,0 +1,50 @@
+cosbench-driver:
+    image: dekobon/cosbench-manta
+    restart: always
+    mem_limit: 8g
+    environment:
+        - MODE=driver
+        - CONSUL_AGENT=1
+        - JAVA_OPTS=-Xmx7500m
+        - LISTENING_PORT=18088
+    env_file: _env
+    expose:
+        - 18088
+    labels:
+        - triton.cns.services=cosbench-driver
+
+cosbench-controller:
+    image: dekobon/cosbench-manta
+    restart: always
+    mem_limit: 4g
+    environment:
+        - MODE=controller
+        - CONSUL_AGENT=1
+        - JAVA_OPTS=-Xmx3800m
+        - LISTENING_PORT=19088
+    env_file: _env
+    ports:
+        - 19088:19088
+    labels:
+        - triton.cns.services=cosbench-controller
+
+# Start with a single host which will bootstrap the cluster.
+# In production we'll want to use an HA cluster.
+consul:
+    image: consul:v0.7.0
+    restart: always
+    mem_limit: 128m
+    expose:
+      - 53
+      - 8300
+      - 8301
+      - 8302
+      - 8400
+      - 8500
+    ports:
+      - 8500
+    dns:
+       - 127.0.0.1
+    labels:
+        - triton.cns.services=consul
+    command: agent -server -client=0.0.0.0 -bootstrap -ui
