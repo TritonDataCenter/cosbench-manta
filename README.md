@@ -66,7 +66,7 @@ overall performance. In particular, experimenting with enabling `http.signature.
 result in higher overall throughput but it may result in a higher error rate. This is why it is
 turned off by default.
 
-## Docker
+## Docker Stand Alone
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
 when you run the project's [Docker](https://www.docker.com/) image:
 [`dekobon/cosbench-manta`](https://hub.docker.com/r/dekobon/cosbench-manta/).
@@ -78,7 +78,7 @@ Manta by doing:
 # Adjust the key paths if needed and be sure to specify your own MANTA_USER
 docker run --name=cosbench \
            -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
-           -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa)" \
+           -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa | base64 -w0)" \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
            -p 18088:18088 -p 19088:19088 \
@@ -94,7 +94,7 @@ Manta by doing:
 docker run --name=cosbench \
            -d \
            -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
-           -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa)" \
+           -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa | base64 -w0)" \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
            -e "JAVA_OPTS=-Xmx7500m" \
@@ -108,7 +108,8 @@ Note: you will **need** to specify the Manta environment variables in order for
 the Manta adaptor to work correctly. You can override or add to the configuration
 within the workload configuration, but you can't embed public nor private keys
 in that configuration, so you will ultimately have to set some of these environment
-variables.
+variables. Also, please note that we did a base64 with no line endings for the
+private key.
 
 Using this configuration you will be able to run the COSBench startup script by:
 ```
@@ -127,6 +128,64 @@ more useful controller control panel ([http://server:19088/controller/](http://l
 From the controller control panel, you can run a benchmark by submitting a new workload.
 The workload configuration `opt/cosbench/conf/manta-config.xml` is a good
 example to get started with.
+
+## Docker Compose on Triton
+
+If you would like to easily run COSBench at scale, you can using Joyent's
+[Triton](https://www.joyent.com/triton) with Docker compose. To get started,
+you will need to create a `_env` file.
+
+This file should look like:
+```
+MANTA_USER=username
+MANTA_URL=https://us-east.manta.joyent.com:443 (or private manta URL)
+MANTA_PUBLIC_KEY=public ssh key for accessing Manta
+MANTA_PRIVATE_KEY=private ssh key for accessing manta in base64 -w0 format
+```
+
+For the `MANTA_PRIVATE_KEY` setting value, you will need to convert your private
+key to a single line of base64 encoded characters. You would do this by:
+
+```
+cat ~/.ssh/private_key_path | base64 -w0 
+```
+
+Once you have those settings in your _env file, make sure you have the
+Docker tools installed (docker and docker compose). Next, make sure that you
+have the [Triton CLI utility](https://www.npmjs.com/package/triton) installed 
+and the [JSON CLI utility](https://www.npmjs.com/package/triton):
+
+```
+npm install -g triton json
+```
+
+If you haven't enabled CNS in your account setting, go and do that next.
+Make sure that your SDC_URL and your DOCKER_HOST are both pointing to the same
+Triton datacenter. Next, run the `./setup.sh` script to write the CNS name for 
+consul to your `_env` file.
+
+Now, start up docker-compose:
+```
+docker-compose -p cos up -d
+```
+
+Find the public CNS name for the controller instance:
+```
+echo "http://$(triton instance get -j cos_cosbench-controller_1 | json .dns_names | cut -d\" -f2 | grep '^cosbench-controller\.svc.*triton.zone$'):19088/controller/"
+```
+
+Go to the link returned from the above command and inspect that the driver was
+populated in the controller. Now, let's scale up some more drivers:
+
+```
+docker-compose -p cos scale cosbench-driver=10
+```
+
+Once all of the drivers have started, refresh the controller dashboard and you
+should see the drivers appear.
+
+You now can dynamically scale many COSBench drivers. However, you will only have
+a single controller node.
 
 ## Contributions
 
