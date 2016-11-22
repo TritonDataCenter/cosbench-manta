@@ -126,3 +126,6 @@ buildNumber.properties
 !docker_build/usr/local/bin
 # Allow all of the local dependencies
 !build-dependencies/**
+
+_env
+_env

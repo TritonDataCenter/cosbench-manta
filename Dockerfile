@@ -1,34 +1,40 @@
 # dekobon/cosbench-manta
 
-# We use an Ubuntu OS because it is the reference OS in the COSBench documentation.
-# We use the phusion passenger base image of Ubuntu, so that we can run COSBench
-# as a multi-process container.
-FROM phusion/baseimage:0.9.18
+# We use the Azul OpenJDK because it is a well tested and supported build.
+FROM azul/zulu-openjdk-debian:8
 
 MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 
-ENV JAVA_MAJOR_VERSION 8
+ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
 ENV COSBENCH_VERSION 0.4.2.c3
 ENV COSBENCH_CHECKSUM 684b39a590a144360d8defb6c9755f69657830dbe1d54ca40fdb74c2b57793aa
-ENV COSBENCH_MANTA_VERSION 1.0.6
-ENV COSBENCH_MANTA_CHECKSUM c0bd7769d784789c3a4360b5e408a10703724c9c7cfff3181b340a2992cd9390
+ENV COSBENCH_MANTA_VERSION 1.0.7
+ENV COSBENCH_MANTA_CHECKSUM 3c205a288f4726f44f536c888f3b8bd13ccf54fb282e43dc5f3c8ab90decc23a
+ENV CONTAINERPILOT_VER 2.4.4
+ENV CONTAINERPILOT file:///etc/containerpilot.json
+ENV MODE unknown
 
-# Setup the (Oracle) JVM and install needed utilities
-RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
-RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
+# Installed tools:
+# ==============================================================================
+# openssh-client:     for ssh-keygen to generate key fingerprints
+# curl:               for downloading binaries
+# ca-certifiactes:    for downloading via https
+# vim:                for debugging cosbench (could be removed)
+# unzip:              for installing binaries
+# htop:               for analyzing cosbench performance (could be removed)
+# netcat-traditional: for starting cosbench OSGI services
+# dc:                 for calculating performance settings
+# ==============================================================================
 
-RUN apt-add-repository ppa:webupd8team/java && \
+RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -qq update && \
     apt-get -qy upgrade && \
-    apt-get install -y oracle-java${JAVA_MAJOR_VERSION}-installer patch unzip dc htop netcat-traditional && \
-    apt-get autoremove -y && \
+    apt-get install --no-install-recommends -qy openssh-client curl ca-certificates vim \
+                                                unzip htop netcat-traditional dc && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
            /tmp/* \
-           /var/tmp/* \
-           /var/cache/oracle-jdk* \
-           /usr/lib/jvm/java-${JAVA_MAJOR_VERSION}-oracle/src.zip \
-           /usr/lib/jvm/java-${JAVA_MAJOR_VERSION}-oracle/javafx-src.zip
+           /var/tmp/*
 
 # Download and install Cosbench
 RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/download/v${COSBENCH_VERSION}/${COSBENCH_VERSION}.zip" > /tmp/cosbench.zip && \
@@ -42,26 +48,55 @@ RUN curl --retry 6 -Ls "https://github.com/joyent/cosbench-manta/releases/downlo
     sha256sum /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
     echo "${COSBENCH_MANTA_CHECKSUM}  /opt/cosbench/osgi/plugins/cosbench-manta.jar" | sha256sum -c
 
+# Install Consul
+# Releases at https://releases.hashicorp.com/consul
+RUN export CONSUL_VERSION=0.7.0 \
+    && export CONSUL_CHECKSUM=b350591af10d7d23514ebaa0565638539900cdb3aaa048f077217c4c46653dd8 \
+    && curl --retry 7 --fail -vo /tmp/consul.zip "https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip" \
+    && echo "${CONSUL_CHECKSUM}  /tmp/consul.zip" | sha256sum -c \
+    && unzip /tmp/consul -d /usr/local/bin \
+    && rm /tmp/consul.zip \
+    && mkdir /config
+
+# Install Consul template
+# Releases at https://releases.hashicorp.com/consul-template/
+RUN export CONSUL_TEMPLATE_VERSION=0.14.0 \
+    && export CONSUL_TEMPLATE_CHECKSUM=7c70ea5f230a70c809333e75fdcff2f6f1e838f29cfb872e1420a63cdf7f3a78 \
+    && curl --retry 7 --fail -Lso /tmp/consul-template.zip "https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip" \
+    && echo "${CONSUL_TEMPLATE_CHECKSUM}  /tmp/consul-template.zip" | sha256sum -c \
+    && unzip /tmp/consul-template.zip -d /usr/local/bin \
+    && rm /tmp/consul-template.zip
+
+# Create empty directories for Consul config and data
+RUN mkdir -p /etc/consul && mkdir -p /var/lib/consul
+
+RUN export CONTAINERPILOT_CHECKSUM=6194ee482dae95844046266dcec2150655ef80e9 \
+    && curl -Lso /tmp/containerpilot.tar.gz \
+         "https://github.com/joyent/containerpilot/releases/download/${CONTAINERPILOT_VER}/containerpilot-${CONTAINERPILOT_VER}.tar.gz" \
+    && echo "${CONTAINERPILOT_CHECKSUM}  /tmp/containerpilot.tar.gz" | sha1sum -c \
+    && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
+    && rm /tmp/containerpilot.tar.gz
+
+
 # Adding machine sizing utility useful when on Triton
 COPY docker_build/usr/local/bin /usr/local/bin
 RUN chmod +x /usr/local/bin/proclimit
 
-# Install patches that will update configuration for use with Manta
-# benchmarking. Check this directory for what we had to change to enable
-# the adapter.
-COPY docker_build/patches /patches
-
-# Adding sample Manta configuration and init files
+# Adding sample Manta configuration, init files and customized configuration
 COPY docker_build/opt/cosbench /opt/cosbench
 
-# Patch Cosbench for use with the Manta adaptor
-RUN patch -p0 < /patches/manta_enabled.patch
+# Adding container pilot config
+COPY docker_build/etc /etc
 
 # Setup Tomcat user to run COSBench process
 RUN groupadd -g 120 tomcat && \
     useradd -g 120 -G sudo -u 120 -c 'Tomcat User' -d /opt/cosbench -r -s /bin/false tomcat && \
     mkdir /opt/cosbench/.ssh && \
-    chown -R tomcat:tomcat /opt/cosbench
+    chown -R tomcat:tomcat /opt/cosbench && \
+    chown -R tomcat:tomcat /var/lib/consul
+
+# Set executable bits on COSBench scripts
+RUN find /opt/cosbench -maxdepth 1 -type f -name \*.sh -exec chmod +x '{}' \;
 
 # Run the container using the tomcat user by default
 USER tomcat
@@ -70,3 +105,9 @@ USER tomcat
 EXPOSE 18088
 # COSBench controller port
 EXPOSE 19088
+
+WORKDIR /opt/cosbench
+
+#/usr/local/bin/containerpilot /opt/cosbench/start-tomcat.sh
+
+CMD [ "/usr/local/bin/containerpilot", "/opt/cosbench/start-tomcat.sh" ]

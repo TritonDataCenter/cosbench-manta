@@ -1,0 +1,12 @@
+{{ $backend := "cosbench-driver" }}
+[controller]
+drivers = {{ len (service $backend) }}
+log_level = INFO
+log_file = log/system.log
+archive_dir = archive
+
+{{ if service $backend }}{{ range $i, $e := (service $backend) }}
+[driver{{ add (index $i) 1 }}]
+name = {{ .ID }}
+url = http://{{ .Address }}:{{ .Port }}/driver
+{{ end }}{{ end }}

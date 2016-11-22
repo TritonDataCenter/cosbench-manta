@@ -1,0 +1,40 @@
+{
+  "consul": "{{ if .CONSUL_AGENT }}localhost{{ else }}{{ if .CONSUL }}{{ .CONSUL }}{{ else }}consul{{ end }}{{ end }}:8500",
+  "logging": {"level": "DEBUG"},
+  "preStop": "/opt/cosbench/stop-{{ .MODE }}.sh",
+  "services": [
+    {
+      "name": "cosbench-{{ .MODE }}",
+      "port": "{{ .LISTENING_PORT }}",
+      "health": "/usr/bin/curl --fail --silent --show-error --output /dev/null http://127.0.0.1:{{ .LISTENING_PORT }}/{{ .MODE }}/",
+      "poll": 10,
+      "ttl": 25,
+      "interfaces": ["eth0"]
+    }
+  ],
+  {{ if eq .MODE "controller"}}
+  "backends": [
+    {
+      "name": "cosbench-driver",
+      "poll": 7,
+      "onChange": "/opt/cosbench/reload-controller.sh"
+    }
+  ],
+  {{ end }}
+  "coprocesses": [{{ if .CONSUL_AGENT }}
+    {
+      "command": ["/usr/local/bin/consul", "agent",
+        "-data-dir=/var/lib/consul",
+        "-config-dir=/etc/consul",
+        "-rejoin",
+        "-retry-join", "{{ if .CONSUL }}{{ .CONSUL }}{{ else }}consul{{ end }}",
+        "-retry-max", "10",
+        "-retry-interval", "10s"],
+      "restarts": "unlimited"
+    },{{ end }}
+    {
+      "command": ["/opt/cosbench/start-{{ .MODE }}.sh"],
+      "restarts": "never"
+    }
+  ]
+}
