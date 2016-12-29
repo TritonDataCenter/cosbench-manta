@@ -9,7 +9,7 @@ ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
 ENV COSBENCH_VERSION 0.4.2.c3
 ENV COSBENCH_CHECKSUM 684b39a590a144360d8defb6c9755f69657830dbe1d54ca40fdb74c2b57793aa
 ENV COSBENCH_MANTA_VERSION 1.1.0-SNAPSHOT
-ENV COSBENCH_MANTA_CHECKSUM 69e794a11b7e34b669e3185e83803bb4a551979a9b1d400a07cf1152081cbe10
+ENV COSBENCH_MANTA_CHECKSUM b29cdbf5b8fce17dffbfb96e8a0a1cfd46d5ab3730264fdde7e67e8481f9e69d
 ENV CONTAINERPILOT_VER 2.6.0
 ENV CONTAINERPILOT file:///etc/containerpilot.json
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
@@ -17,8 +17,7 @@ ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
 ENV MODE unknown
 
 # Metadata for Docker containers: http://label-schema.org/
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" \
+LABEL org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" \
       org.label-schema.description="COSBench with Manta Support" \
       org.label-schema.url="https://github.com/joyent/cosbench-manta" \
       org.label-schema.vcs-url="org.label-schema.vcs-ref" \
@@ -41,11 +40,17 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -qq update && \
     apt-get -qy upgrade && \
     apt-get install --no-install-recommends -qy openssh-client curl ca-certificates vim \
-                                                unzip htop netcat-traditional dc && \
+                                                unzip htop netcat-traditional dc less && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
            /tmp/* \
            /var/tmp/*
+
+# Install cryptographic extensions
+RUN curl --retry 6 -Ls "http://www.azulsystems.com/sites/default/files/images/ZuluJCEPolicies.zip" > /tmp/ZuluJCEPolicies.zip && \
+    echo '8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  /tmp/ZuluJCEPolicies.zip' | sha256sum -c && \
+    unzip -o -j /tmp/ZuluJCEPolicies.zip ZuluJCEPolicies/local_policy.jar ZuluJCEPolicies/US_export_policy.jar -d $JAVA_HOME/jre/lib/security && \
+    rm /tmp/ZuluJCEPolicies.zip
 
 # Download and install Cosbench
 RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/download/v${COSBENCH_VERSION}/${COSBENCH_VERSION}.zip" > /tmp/cosbench.zip && \
@@ -56,7 +61,6 @@ RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/downloa
 
 # Download and install the Manta adaptor
 RUN curl --retry 6 -Ls "https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar" > /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
-    sha256sum /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
     echo "${COSBENCH_MANTA_CHECKSUM}  /opt/cosbench/osgi/plugins/cosbench-manta.jar" | sha256sum -c
 
 # Install Consul
