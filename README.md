@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/joyent/cosbench-manta.svg?branch=master)](https://travis-ci.org/joyent/cosbench-manta) [![](https://badge.imagelayers.io/dekobon/cosbench-manta:latest.svg)](https://imagelayers.io/?images=dekobon/cosbench-manta:latest 'Get your own badge on imagelayers.io')
+[![Build Status](https://travis-ci.org/joyent/cosbench-manta.svg?branch=master)](https://travis-ci.org/joyent/cosbench-manta) [![](https://images.microbadger.com/badges/image/dekobon/cosbench-manta.svg)](https://microbadger.com/images/dekobon/cosbench-manta "Get your own image badge on microbadger.com")
 
 # COSBench Manta Adaptor
 
