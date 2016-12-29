@@ -16,6 +16,15 @@ ENV OSGI_CONSOLE_PORT_DRIVER 18089
 ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
 ENV MODE unknown
 
+# Metadata for Docker containers: http://label-schema.org/
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" \
+      org.label-schema.description="COSBench with Manta Support" \
+      org.label-schema.url="https://github.com/joyent/cosbench-manta" \
+      org.label-schema.vcs-url="org.label-schema.vcs-ref" \
+      org.label-schema.vendor="Joyent" \
+      org.label-schema.schema-version="1.0"
+
 # Installed tools:
 # ==============================================================================
 # openssh-client:     for ssh-keygen to generate key fingerprints
