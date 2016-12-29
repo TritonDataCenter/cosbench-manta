@@ -59,11 +59,9 @@ in the config element of the workload configuration. In addition to those proper
 |--------------------------------------|---------------------------|
 | 2                                    | durability-level          |
 
-For benchmarking purposes, changing `chunked`, `durability-level`, `http.signature.native.rsa`, 
-`http.signature.cache.ttl`, `manta.http_transport` or `https.cipherSuites` can have an impact on
-overall performance. In particular, experimenting with enabling `http.signature.cache.ttl` may
-result in higher overall throughput but it may result in a higher error rate. This is why it is
-turned off by default.
+For benchmarking purposes, changing `durability-level`, `http.signature.native.rsa`, 
+`manta.http_buffer_size` or `https.cipherSuites` can have an impact on
+overall performance.
 
 ## Docker Stand Alone
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
