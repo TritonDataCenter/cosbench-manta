@@ -8,9 +8,9 @@ MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
 ENV COSBENCH_VERSION 0.4.2.c3
 ENV COSBENCH_CHECKSUM 684b39a590a144360d8defb6c9755f69657830dbe1d54ca40fdb74c2b57793aa
-ENV COSBENCH_MANTA_VERSION 1.0.7
-ENV COSBENCH_MANTA_CHECKSUM 3c205a288f4726f44f536c888f3b8bd13ccf54fb282e43dc5f3c8ab90decc23a
-ENV CONTAINERPILOT_VER 2.4.4
+ENV COSBENCH_MANTA_VERSION 1.1.0
+ENV COSBENCH_MANTA_CHECKSUM ?
+ENV CONTAINERPILOT_VER 2.6.0
 ENV CONTAINERPILOT file:///etc/containerpilot.json
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
 ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
@@ -72,7 +72,7 @@ RUN export CONSUL_TEMPLATE_VERSION=0.14.0 \
 # Create empty directories for Consul config and data
 RUN mkdir -p /etc/consul && mkdir -p /var/lib/consul
 
-RUN export CONTAINERPILOT_CHECKSUM=6194ee482dae95844046266dcec2150655ef80e9 \
+RUN export CONTAINERPILOT_CHECKSUM=c1bcd137fadd26ca2998eec192d04c08f62beb1f \
     && curl -Lso /tmp/containerpilot.tar.gz \
          "https://github.com/joyent/containerpilot/releases/download/${CONTAINERPILOT_VER}/containerpilot-${CONTAINERPILOT_VER}.tar.gz" \
     && echo "${CONTAINERPILOT_CHECKSUM}  /tmp/containerpilot.tar.gz" | sha1sum -c \

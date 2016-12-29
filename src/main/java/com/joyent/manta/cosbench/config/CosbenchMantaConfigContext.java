@@ -4,7 +4,9 @@ import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
 import com.joyent.manta.config.ConfigContext;
+import com.joyent.manta.config.EncryptionObjectAuthenticationMode;
 import com.joyent.manta.config.MapConfigContext;
+import org.bouncycastle.util.encoders.Base64;
 
 /**
  * Cosbench specific implementation of {@link ConfigContext} that allows us
@@ -86,9 +88,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
-    public String getHttpTransport() {
-        return safeGetString(MapConfigContext.MANTA_HTTP_TRANSPORT_KEY,
-                "Couldn't get http transport from COSBench config");
+    public Integer getHttpBufferSize() {
+        return safeGetInteger(MapConfigContext.MANTA_HTTP_BUFFER_SIZE_KEY,
+                "Couldn't get http buffer size from COSBench config");
     }
 
     @Override
@@ -116,17 +118,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
-    public Integer getSignatureCacheTTL() {
-        return safeGetInteger(MapConfigContext.MANTA_SIGS_CACHE_TTL_KEY,
-                "Couldn't get http signatures cache ttl from COSBench config");
-    }
-
-    /**
-     * @return when true chunk encoding is enabled
-     */
-    public Boolean useChunking() {
-        return safeGetBoolean("chunked",
-                "Couldn't get chunking setting from COSBench config");
+    public Integer getTcpSocketTimeout() {
+        return safeGetInteger(MapConfigContext.MANTA_TCP_SOCKET_TIMEOUT_KEY,
+                "Couldn't get TCP socket timeout from COSBench config");
     }
 
     /**
@@ -135,6 +129,46 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public Integer getDurabilityLevel() {
         return safeGetInteger("durability-level",
                 "Couldn't get durability level setting from COSBench config");
+    }
+
+    @Override
+    public Boolean isClientEncryptionEnabled() {
+        return safeGetBoolean(MapConfigContext.MANTA_CLIENT_ENCRYPTION_ENABLED_KEY,
+                "Couldn't get encryption enabled boolean flag");
+    }
+
+    @Override
+    public Boolean permitUnencryptedDownloads() {
+        return safeGetBoolean(MapConfigContext.MANTA_PERMIT_UNENCRYPTED_DOWNLOADS_KEY,
+                "Couldn't get permit unencrypted downloads boolean flag");
+    }
+
+    @Override
+    public EncryptionObjectAuthenticationMode getEncryptionAuthenticationMode() {
+        EncryptionObjectAuthenticationMode mode = safeGetEnum(
+                MapConfigContext.MANTA_ENCRYPTION_AUTHENTICATION_MODE_KEY,
+                "Couldn't get object authentication mode",
+                EncryptionObjectAuthenticationMode.class);
+
+        return mode;
+    }
+
+    @Override
+    public String getEncryptionPrivateKeyPath() {
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_PRIVATE_KEY_PATH_KEY,
+                "Couldn't get client-side encryption private key path");
+    }
+
+    @Override
+    public byte[] getEncryptionPrivateKeyBytes() {
+        String base64 = safeGetString(MapConfigContext.MANTA_ENCRYPTION_PRIVATE_KEY_BYTES_BASE64_KEY,
+                "Couldn't get client-side encryption private key base64 data");
+
+        if (base64 != null) {
+            return Base64.decode(base64);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -186,6 +220,32 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     private Boolean safeGetBoolean(final String key, final String message) {
         try {
             return Boolean.parseBoolean(config.get(key));
+        } catch (RuntimeException e) {
+            logger.trace(message, e);
+            return null;
+        }
+    }
+
+    /**
+     * Utility method to checks for the presence of an Enum value in the
+     * COSBench configuration and then returns the value if found.
+     *
+     * @param key key to check for
+     * @param message message to display when value isn't present
+     * @param enumClass enum class to parse as
+     * @param <T> enum type
+     * @return enum instance matching the value of the key
+     */
+    private  <T extends Enum<T>> T safeGetEnum(final String key, final String message,
+                                               final Class<T> enumClass) {
+        try {
+            String value = config.get(key);
+
+            if (value == null) {
+                return null;
+            }
+
+            return Enum.valueOf(enumClass, value);
         } catch (RuntimeException e) {
             logger.trace(message, e);
             return null;

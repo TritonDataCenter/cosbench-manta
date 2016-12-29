@@ -58,7 +58,6 @@ in the config element of the workload configuration. In addition to those proper
 | Default                              | System Property           |
 |--------------------------------------|---------------------------|
 | 2                                    | durability-level          |
-| false                                | chunked                   |
 
 For benchmarking purposes, changing `chunked`, `durability-level`, `http.signature.native.rsa`, 
 `http.signature.cache.ttl`, `manta.http_transport` or `https.cipherSuites` can have an impact on

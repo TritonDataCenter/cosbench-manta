@@ -5,7 +5,7 @@ import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
 import com.joyent.manta.client.MantaClient;
-import com.joyent.manta.client.MantaHttpHeaders;
+import com.joyent.manta.http.MantaHttpHeaders;
 import com.joyent.manta.client.MantaMetadata;
 import com.joyent.manta.config.ChainedConfigContext;
 import com.joyent.manta.config.DefaultsConfigContext;
@@ -49,11 +49,6 @@ public class MantaStorage extends NoneStorage {
     private String currentTestDirectory;
 
     /**
-     * Flag indicating whether or not to send files using chunked encoding.
-     */
-    private Boolean chunked;
-
-    /**
      * Number of copies of object to store.
      */
     private Integer durabilityLevel;
@@ -77,7 +72,6 @@ public class MantaStorage extends NoneStorage {
                 new SystemSettingsConfigContext(),
                 cosbenchConfig);
 
-        this.chunked = cosbenchConfig.useChunking();
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
 
         logger.info(String.format("Client configuration: %s", context));
@@ -144,10 +138,6 @@ public class MantaStorage extends NoneStorage {
 
         try {
             MantaHttpHeaders headers = new MantaHttpHeaders();
-
-            if (chunked != null && chunked) {
-                headers.setContentEncoding("chunked");
-            }
 
             if (durabilityLevel != null) {
                 headers.setDurabilityLevel(durabilityLevel);
