@@ -46,12 +46,12 @@ in the config element of the workload configuration. In addition to those proper
 | 20000                                | manta.timeout             |
 | 3 (6 for integration tests)          | manta.retries             |
 | 24                                   | manta.max_connections     |
-| ApacheHttpTransport                  | manta.http_transport      |
+| 8192                                 | manta.http_buffer_size    |
 | TLSv1.2                              | https.protocols           |
 | <see java-manta code>                | https.cipherSuites        |
 | false                                | manta.no_auth             |
 | false                                | manta.disable_native_sigs |
-| 0                                    | http.signature.cache.ttl  |
+| 10000                                | manta.tcp_socket_timeout  |
 
 *COSBench Properties*
 
