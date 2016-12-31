@@ -5,7 +5,6 @@ import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
 import com.joyent.manta.client.MantaClient;
-import com.joyent.manta.http.MantaHttpHeaders;
 import com.joyent.manta.client.MantaMetadata;
 import com.joyent.manta.config.ChainedConfigContext;
 import com.joyent.manta.config.DefaultsConfigContext;
@@ -15,6 +14,7 @@ import com.joyent.manta.config.SystemSettingsConfigContext;
 import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
+import com.joyent.manta.http.MantaHttpHeaders;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +53,11 @@ public class MantaStorage extends NoneStorage {
      */
     private Integer durabilityLevel;
 
+    /**
+     * Flag that toggles chunked transfer encoding.
+     */
+    private boolean chunked;
+
     @Override
     public void init(final Config config, final Logger logger) {
         logger.debug("Manta client has started initialization");
@@ -74,7 +79,23 @@ public class MantaStorage extends NoneStorage {
 
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
 
-        logger.info(String.format("Client configuration: %s", context));
+        if (cosbenchConfig.chunked() == null) {
+            logger.info("Chunked mode is disabled");
+            this.chunked = false;
+        } else {
+            final String status;
+            if (cosbenchConfig.chunked()) {
+                status = "enabled";
+            } else {
+                status = "disabled";
+            }
+
+            logger.info("Chunked mode is " + status);
+            this.chunked = cosbenchConfig.chunked();
+        }
+
+        logger.info(String.format("Client configuration: %s",
+                context));
 
         try {
             client = new MantaClient(context);
@@ -135,15 +156,22 @@ public class MantaStorage extends NoneStorage {
         super.createObject(container, object, data, length, config);
 
         final String path = pathOfObject(container, object);
+        final long contentLength;
+
+        if (chunked) {
+            contentLength = -1L;
+        } else {
+            contentLength = length;
+        }
+
+        MantaHttpHeaders headers = new MantaHttpHeaders();
 
         try {
-            MantaHttpHeaders headers = new MantaHttpHeaders();
-
             if (durabilityLevel != null) {
                 headers.setDurabilityLevel(durabilityLevel);
             }
 
-            client.put(path, data, headers);
+            client.put(path, data, contentLength, headers, null);
         } catch (MantaClientHttpResponseException e) {
             // This is a fall-back in the weird cases where COSBench doesn't
             // do things in the right order.
@@ -151,7 +179,7 @@ public class MantaStorage extends NoneStorage {
                 try {
                     String dir = directoryOfContainer(container);
                     client.putDirectory(dir, true);
-                    client.put(path, data);
+                    client.put(path, data, contentLength, headers, null);
                 } catch (IOException ioe) {
                     throw new StorageException(ioe);
                 }

@@ -123,12 +123,16 @@ public class CosbenchMantaConfigContext implements ConfigContext {
                 "Couldn't get TCP socket timeout from COSBench config");
     }
 
-    /**
-     * @return the number of copies to store of an object
-     */
-    public Integer getDurabilityLevel() {
-        return safeGetInteger("durability-level",
-                "Couldn't get durability level setting from COSBench config");
+    @Override
+    public Boolean verifyUploads() {
+        return safeGetBoolean(MapConfigContext.MANTA_VERIFY_UPLOADS_KEY,
+                "Couldn't get verify uploads flag from COSBench config");
+    }
+
+    @Override
+    public Integer getUploadBufferSize() {
+        return safeGetInteger(MapConfigContext.MANTA_UPLOAD_BUFFER_SIZE_KEY,
+                "Couldn't get upload buffer size from COSBench config");
     }
 
     @Override
@@ -169,6 +173,26 @@ public class CosbenchMantaConfigContext implements ConfigContext {
         } else {
             return null;
         }
+    }
+
+    // ========================================================================
+    // COSBench Parameters
+    // ========================================================================
+
+    /**
+     * @return the number of copies to store of an object
+     */
+    public Integer getDurabilityLevel() {
+        return safeGetInteger("durability-level",
+                "Couldn't get durability level setting from COSBench config");
+    }
+
+    /**
+     * @return when true chunk encoding is enabled
+     */
+    public Boolean chunked() {
+        return safeGetBoolean("chunked",
+                "Couldn't get chunked setting from COSBench config");
     }
 
     /**
