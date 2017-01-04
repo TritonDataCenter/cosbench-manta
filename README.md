@@ -53,7 +53,7 @@ in the config element of the workload configuration. In addition to those proper
 | false                                | manta.disable_native_sigs |
 | 10000                                | manta.tcp_socket_timeout  |
 | true                                 | manta.verify_uploads      |
-| 16_384                               | manta.upload_buffer_size  |
+| 16384                                | manta.upload_buffer_size  |
 
 *COSBench Properties*
 
@@ -61,6 +61,7 @@ in the config element of the workload configuration. In addition to those proper
 |--------------------------------------|---------------------------|
 | 2                                    | durability-level          |
 | false                                | chunked                   |
+| stor/cosbench                        | manta-directory           |
 
 For benchmarking purposes, changing `chunked`, `durability-level`, 
 `http.signature.native.rsa`, `manta.http_buffer_size`, `manta.verify_uploads`,

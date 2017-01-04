@@ -195,6 +195,11 @@ public class CosbenchMantaConfigContext implements ConfigContext {
                 "Couldn't get chunked setting from COSBench config");
     }
 
+    public String getBaseDirectory() {
+        return safeGetString("manta-directory",
+                "Couldn't get Manta directory setting from COSBench config");
+    }
+
     /**
      * Utility method that checks for the presence of Integer values in
      * the COSBench configuration and then returns the value if found.

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Manta implementation of the COSBench {@link com.intel.cosbench.api.storage.StorageAPI}.
@@ -30,7 +31,7 @@ public class MantaStorage extends NoneStorage {
     /**
      * Hardcoded directory in Manta in which all benchmark files are stored.
      */
-    private static final String COSBENCH_BASE_DIR = "stor/cosbench";
+    private static final String DEFAULT_COSBENCH_BASE_DIR = "stor/cosbench";
 
     /**
      * The default number of maximum HTTP connections at one time to the
@@ -97,12 +98,17 @@ public class MantaStorage extends NoneStorage {
         logger.info(String.format("Client configuration: %s",
                 context));
 
+
         try {
             client = new MantaClient(context);
 
+            final String baseDir = Objects.toString(
+                    cosbenchConfig.getBaseDirectory(),
+                    DEFAULT_COSBENCH_BASE_DIR);
+
             // We rely on COSBench properly cleaning up after itself.
             currentTestDirectory = String.format("%s/%s",
-                    context.getMantaHomeDirectory(), COSBENCH_BASE_DIR);
+                    context.getMantaHomeDirectory(), baseDir);
 
             client.putDirectory(currentTestDirectory, true);
 
