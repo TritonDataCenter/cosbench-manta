@@ -195,6 +195,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
                 "Couldn't get chunked setting from COSBench config");
     }
 
+    /**
+     * @return the base directory under the home directory in Manta to write test data
+     */
     public String getBaseDirectory() {
         return safeGetString("manta-directory",
                 "Couldn't get Manta directory setting from COSBench config");
