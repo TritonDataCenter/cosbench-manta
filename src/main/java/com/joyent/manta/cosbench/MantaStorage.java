@@ -15,9 +15,12 @@ import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 import com.joyent.manta.http.MantaHttpHeaders;
+import com.joyent.manta.http.signature.Signer;
+import com.joyent.manta.http.signature.ThreadLocalSigner;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Signature;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -95,9 +98,10 @@ public class MantaStorage extends NoneStorage {
             this.chunked = cosbenchConfig.chunked();
         }
 
+        logSignerImplementation(!context.disableNativeSignatures());
+
         logger.info(String.format("Client configuration: %s",
                 context));
-
 
         try {
             client = new MantaClient(context);
@@ -287,6 +291,31 @@ public class MantaStorage extends NoneStorage {
     @Override
     public void abort() {
         super.abort();
+    }
+
+    /**
+     * Logs the current HTTP signatures signer implementation. This method is
+     * useful for telling us if the native code signer was loaded.
+     *
+     * @param nativeSignaturesEnabled flag indicating if native signatures are enabled
+     */
+    private void logSignerImplementation(final boolean nativeSignaturesEnabled) {
+        ThreadLocalSigner threadLocalSigner = null;
+
+        try {
+            threadLocalSigner = new ThreadLocalSigner(nativeSignaturesEnabled);
+            Signer signer = threadLocalSigner.get();
+            Signature signature = signer.getSignature();
+            String msg = String.format("HTTP signature signer implementation: %s",
+                    signature.getClass());
+            logger.info(msg);
+        } catch (RuntimeException e) {
+            logger.error("Error getting HTTP signatures signing implementation", e);
+        } finally {
+            if (threadLocalSigner != null) {
+                threadLocalSigner.remove();
+            }
+        }
     }
 
     /**
