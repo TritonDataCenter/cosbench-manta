@@ -306,8 +306,9 @@ public class MantaStorage extends NoneStorage {
             threadLocalSigner = new ThreadLocalSigner(nativeSignaturesEnabled);
             Signer signer = threadLocalSigner.get();
             Signature signature = signer.getSignature();
-            String msg = String.format("HTTP signature signer implementation: %s",
-                    signature.getClass());
+            String msg = String.format("HTTP signature signer algorithm [%s] ",
+                    signature.getAlgorithm());
+
             logger.info(msg);
         } catch (RuntimeException e) {
             logger.error("Error getting HTTP signatures signing implementation", e);
