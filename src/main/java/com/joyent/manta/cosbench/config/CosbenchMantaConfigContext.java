@@ -4,7 +4,7 @@ import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
 import com.joyent.manta.config.ConfigContext;
-import com.joyent.manta.config.EncryptionObjectAuthenticationMode;
+import com.joyent.manta.config.EncryptionAuthenticationMode;
 import com.joyent.manta.config.MapConfigContext;
 import org.bouncycastle.util.encoders.Base64;
 
@@ -148,11 +148,23 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
-    public EncryptionObjectAuthenticationMode getEncryptionAuthenticationMode() {
-        EncryptionObjectAuthenticationMode mode = safeGetEnum(
+    public String getEncryptionKeyId() {
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_KEY_ID_KEY,
+                "Couldn't get encryption key id");
+    }
+
+    @Override
+    public String getEncryptionAlgorithm() {
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_ALGORITHM_KEY,
+                "Could'nt get encryption algorithm");
+    }
+
+    @Override
+    public EncryptionAuthenticationMode getEncryptionAuthenticationMode() {
+        EncryptionAuthenticationMode mode = safeGetEnum(
                 MapConfigContext.MANTA_ENCRYPTION_AUTHENTICATION_MODE_KEY,
                 "Couldn't get object authentication mode",
-                EncryptionObjectAuthenticationMode.class);
+                EncryptionAuthenticationMode.class);
 
         return mode;
     }

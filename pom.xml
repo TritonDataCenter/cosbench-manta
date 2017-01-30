@@ -92,6 +92,8 @@
         <dependency.slf4j-log4j12.version>1.7.21</dependency.slf4j-log4j12.version>
         <dependency.osgi4.version>1.0</dependency.osgi4.version>
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
+        <dependency.testng.version>6.10</dependency.testng.version>
+        <dependency.commons-lang.version>3.5</dependency.commons-lang.version>
     </properties>
 
     <repositories>
@@ -151,6 +153,23 @@
             <version>${dependency.osgi4.version}</version>
             <scope>provided</scope>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${dependency.testng.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>junit</artifactId>
+                    <groupId>junit</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${dependency.commons-lang.version}</version>
         </dependency>
     </dependencies>
 
