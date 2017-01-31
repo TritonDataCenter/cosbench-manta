@@ -191,6 +191,17 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     // COSBench Parameters
     // ========================================================================
 
+    public boolean logging() {
+        Boolean enabled = safeGetBoolean("logging",
+                "Couldn't get logging setting from COSBench config");
+
+        if (enabled == null) {
+            return true;
+        } else {
+            return enabled;
+        }
+    }
+
     /**
      * @return the number of copies to store of an object
      */
@@ -213,6 +224,11 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public String getBaseDirectory() {
         return safeGetString("manta-directory",
                 "Couldn't get Manta directory setting from COSBench config");
+    }
+
+    public Integer getNumberOfHttpByteRangeSections() {
+        return safeGetInteger("no-of-http-range-sections",
+                "Couldn't get number of http byte range sections from COSBench config");
     }
 
     /**

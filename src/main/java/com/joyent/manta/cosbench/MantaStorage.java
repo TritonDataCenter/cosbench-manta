@@ -62,6 +62,11 @@ public class MantaStorage extends NoneStorage {
      */
     private boolean chunked;
 
+    /**
+     * Flag indicating that logging is enabled.
+     */
+    protected boolean logging;
+
     @Override
     public void init(final Config config, final Logger logger) {
         logger.debug("Manta client has started initialization");
@@ -82,9 +87,13 @@ public class MantaStorage extends NoneStorage {
                 cosbenchConfig);
 
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
+        this.logging = cosbenchConfig.logging();
 
         if (cosbenchConfig.chunked() == null) {
-            logger.info("Chunked mode is disabled");
+            if (logging) {
+                logger.info("Chunked mode is disabled");
+            }
+
             this.chunked = false;
         } else {
             final String status;
@@ -94,14 +103,18 @@ public class MantaStorage extends NoneStorage {
                 status = "disabled";
             }
 
-            logger.info("Chunked mode is " + status);
+            if (logging) {
+                logger.info("Chunked mode is " + status);
+            }
             this.chunked = cosbenchConfig.chunked();
         }
 
         logSignerImplementation(!context.disableNativeSignatures());
 
-        logger.info(String.format("Client configuration: %s",
-                context));
+        if (logging) {
+            logger.info(String.format("Client configuration: %s",
+                    context));
+        }
 
         try {
             client = new MantaClient(context);
@@ -126,33 +139,45 @@ public class MantaStorage extends NoneStorage {
             throw new StorageException(e);
         }
 
-        logger.debug("Manta client has been initialized");
+        if (logging) {
+            logger.debug("Manta client has been initialized");
+        }
     }
 
     @Override
     public void createContainer(final String container, final Config config) {
-        super.createContainer(container, config);
+        if (logging) {
+            logger.info("performing PUT at /{}", container);
+        }
 
         try {
             client.putDirectory(directoryOfContainer(container));
         } catch (Exception e) {
-            logger.error("Error creating container", e);
+            if (logging) {
+                logger.error("Error creating container", e);
+            }
         }
     }
 
     @Override
     public void deleteContainer(final String container, final Config config) {
-        super.deleteContainer(container, config);
+        if (logging) {
+            logger.info("performing DELETE at /{}", container);
+        }
 
         try {
             client.deleteRecursive(directoryOfContainer(container));
         } catch (MantaClientHttpResponseException e) {
             if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
-                logger.error("Error error deleting object", e);
+                if (logging) {
+                    logger.error("Error error deleting object", e);
+                }
                 throw new StorageException(e);
             }
         } catch (Exception e) {
-            logger.error("Error deleting container", e);
+            if (logging) {
+                logger.error("Error deleting container", e);
+            }
             throw new StorageException(e);
         }
     }
@@ -163,7 +188,9 @@ public class MantaStorage extends NoneStorage {
                              final InputStream data,
                              final long length,
                              final Config config) {
-        super.createObject(container, object, data, length, config);
+        if (logging) {
+            logger.info("performing PUT at /{}/{}", container, object);
+        }
 
         final String path = pathOfObject(container, object);
         final long contentLength;
@@ -197,7 +224,10 @@ public class MantaStorage extends NoneStorage {
                 throw new StorageException(e);
             }
         } catch (Exception e) {
-            logger.error("Error error creating object", e);
+            if (logging) {
+                logger.error("Error error creating object", e);
+            }
+
             throw new StorageException(e);
         }
     }
@@ -205,31 +235,41 @@ public class MantaStorage extends NoneStorage {
     @Override
     public void deleteObject(final String container, final String object,
                              final Config config) {
-        super.deleteObject(container, object, config);
+        if (logging) {
+            logger.info("performing DELETE at /{}/{}", container, object);
+        }
 
         try {
             String path = pathOfObject(container, object);
             client.delete(path);
         } catch (MantaClientHttpResponseException e) {
             if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
-                logger.error("Error error deleting object", e);
+                if (logging) {
+                    logger.error("Error error deleting object", e);
+                }
                 throw new StorageException(e);
             }
         } catch (Exception e) {
-            logger.error("Error error deleting object", e);
+            if (logging) {
+                logger.error("Error error deleting object", e);
+            }
             throw new StorageException(e);
         }
     }
 
     @Override
     public InputStream getObject(final String container, final String object, final Config config) {
-        super.getObject(container, object, config);
+        if (logging) {
+            logger.info("performing GET at /{}/{}", container, object);
+        }
 
         try {
             final String path = pathOfObject(container, object);
             return client.getAsInputStream(path);
         } catch (Exception e) {
-            logger.error("Error error getting object", e);
+            if (logging) {
+                logger.error("Error error getting object", e);
+            }
             throw new StorageException(e);
         }
     }
@@ -239,7 +279,9 @@ public class MantaStorage extends NoneStorage {
                                   final String object,
                                   final Map<String, String> map,
                                   final Config config) {
-        super.createMetadata(container, object, map, config);
+        if (logging) {
+            logger.info("performing POST at /{}/{}", container, object);
+        }
 
         try {
             String path = pathOfObject(container, object);
@@ -253,7 +295,9 @@ public class MantaStorage extends NoneStorage {
             MantaMetadata metadata = new MantaMetadata(prefixedMap);
             client.putMetadata(path, metadata);
         } catch (Exception e) {
-            logger.error("Error error creating metadata", e);
+            if (logging) {
+                logger.error("Error error creating metadata", e);
+            }
             throw new StorageException(e);
         }
     }
@@ -262,27 +306,31 @@ public class MantaStorage extends NoneStorage {
     protected Map<String, String> getMetadata(final String container,
                                               final String object,
                                               final Config config) {
-        super.getMetadata(container, object, config);
+        if (logging) {
+            logger.info("performing HEAD at /{}/{}", container, object);
+        }
 
         try {
             String path = pathOfObject(container, object);
             return client.head(path).getMetadata();
         } catch (Exception e) {
-            logger.error("Error error getting metadata", e);
+            if (logging) {
+                logger.error("Error error getting metadata", e);
+            }
             throw new StorageException(e);
         }
     }
 
     @Override
     public void dispose() {
-        super.dispose();
-
         try {
             if (client != null) {
                 client.close();
             }
         } catch (Exception e) {
-            logger.warn("Error when attempting to close Manta client", e);
+            if (logging) {
+                logger.warn("Error when attempting to close Manta client", e);
+            }
         }
 
         client = null;
@@ -290,7 +338,7 @@ public class MantaStorage extends NoneStorage {
 
     @Override
     public void abort() {
-        super.abort();
+        client.closeQuietly();
     }
 
     /**
@@ -309,9 +357,13 @@ public class MantaStorage extends NoneStorage {
             String msg = String.format("HTTP signature signer algorithm [%s] ",
                     signature.getAlgorithm());
 
-            logger.info(msg);
+            if (logging) {
+                logger.info(msg);
+            }
         } catch (RuntimeException e) {
-            logger.error("Error getting HTTP signatures signing implementation", e);
+            if (logging) {
+                logger.error("Error getting HTTP signatures signing implementation", e);
+            }
         } finally {
             if (threadLocalSigner != null) {
                 threadLocalSigner.remove();
