@@ -14,8 +14,8 @@ import java.nio.file.Path;
 @Test
 public class RangeJoiningInputStreamTest {
     public void canReadFileInChunksAsSingleStream() throws Exception {
-        final long size = 10;
-        final int noOfSections = 5;
+        final long size = 564531;
+        final int noOfSections = 33;
         final Path path = Files.createTempFile("chunk-read", ".data");
         final byte[] expected = new byte[(int)size];
 
@@ -31,8 +31,8 @@ public class RangeJoiningInputStreamTest {
 
             final byte[] actual;
 
-            try (RangeJoiningInputStream rjis = new RangeJoiningInputStream("",
-                    null, size, noOfSections, path.toFile());
+            try (RangeJoiningInputStream rjis = new RangeJoiningInputStream(
+                    size, noOfSections, path.toFile());
                  ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
                 bytesCopied += IOUtils.copy(rjis, bout);
 

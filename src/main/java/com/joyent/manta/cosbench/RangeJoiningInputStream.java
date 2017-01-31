@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -19,36 +20,95 @@ import java.util.function.Supplier;
  * @since 1.1.0
  */
 public class RangeJoiningInputStream extends InputStream {
+    /**
+     * End of file code returned by streams.
+     */
     private static final int EOF = -1;
 
+    /**
+     * Path of object in Manta.
+     */
     private final String path;
+
+    /**
+     * Reference to open Manta client.
+     */
     private final MantaClient client;
+
+    /**
+     * Object representing the different sections to break the object into.
+     */
     private final Range[] sections;
+
+    /**
+     * Supplier for each stream of input for each section of the file.
+     */
     private final Supplier<InputStream> streamSupplier;
+
+    /**
+     * Counter of the current section.
+     */
     private int currentSection = 0;
+
+    /**
+     * Number of bytes read so far.
+     */
     private long bytesRead = 0;
+
+    /**
+     * Size of the object / file.
+     */
     private long size;
+
+    /**
+     * The {@link InputStream} for the current section.
+     */
     private InputStream backingStream;
 
+    /**
+     * Class representing the start and end ranges of a section.
+     */
     static class Range {
-        final long startInclusive;
-        final long endInclusive;
+        /**
+         * Start position of the first byte to read.
+         */
+        private final long startInclusive;
 
-        public Range(final long startInclusive, final long endInclusive) {
+        /**
+         * End position of the last byte to read.
+         */
+        private final long endInclusive;
+
+        /**
+         * Creates a new instance of a section range.
+         *
+         * @param startInclusive start position of the first byte to read
+         * @param endInclusive end position of the last byte to read
+         */
+        Range(final long startInclusive, final long endInclusive) {
             this.startInclusive = startInclusive;
             this.endInclusive = endInclusive;
         }
 
+        /**
+         * @return start position of the first byte to read
+         */
         public long getStartInclusive() {
             return startInclusive;
         }
 
+        /**
+         * @return end position of the last byte to read
+         */
         public long getEndInclusive() {
             return endInclusive;
         }
 
+        /**
+         * @return size in bytes of section
+         */
         public long getSize() {
-            return this.endInclusive - this.startInclusive;
+            return (this.endInclusive - this.startInclusive) + 1;
         }
 
         @Override
@@ -58,8 +118,10 @@ public class RangeJoiningInputStream extends InputStream {
         }
     }
 
+    /**
+     * Supplier class that supplies section streams via Manta.
+     */
     private class MantaObjectInputStreamSupplier implements Supplier<InputStream> {
-
         @Override
         public InputStream get() {
             MantaHttpHeaders headers = new MantaHttpHeaders();
@@ -75,9 +137,20 @@ public class RangeJoiningInputStream extends InputStream {
         }
     }
 
+    /**
+     * Supplier class that supplies section streams via a file.
+     */
     private class FileSectionStreamSupplier implements Supplier<InputStream> {
+        /**
+         * Source file to read data from.
+         */
         private final File file;
 
+        /**
+         * Creates a new instance based on the specified file.
+         *
+         * @param file file to use for sectional input
+         */
         FileSectionStreamSupplier(final File file) {
             this.file = file;
         }
@@ -88,7 +161,7 @@ public class RangeJoiningInputStream extends InputStream {
 
             try {
                 FileInputStream fs = new FileInputStream(file);
-                long toSkip = section.getStartInclusive() - 1;
+                long toSkip = section.getStartInclusive();
 
                 if (toSkip > 0) {
                     long skipped = fs.skip(toSkip);
@@ -99,7 +172,7 @@ public class RangeJoiningInputStream extends InputStream {
                 }
 
 
-                return new BoundedInputStream(fs, section.getSize() + 1);
+                return new BoundedInputStream(fs, section.getSize());
             } catch (IOException e) {
                 throw new UncheckedIOException("Unable to create file InputStream",
                         e);
@@ -107,10 +180,30 @@ public class RangeJoiningInputStream extends InputStream {
         }
     }
 
+    /**
+     * Creates a new instance that uses multiple HTTP range requests to get
+     * a single file and glue it all together as a single {@link InputStream}.
+     *
+     * @param path path to object in Manta
+     * @param client reference to an open Manta client
+     * @param size size of the object
+     * @param noOfSections number of sections to split object into
+     */
     RangeJoiningInputStream(final String path,
                             final MantaClient client,
                             final long size,
                             final int noOfSections) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(client);
+
+        if (size <= 0) {
+            throw new IllegalArgumentException("Size of test object must be greater than zero");
+        }
+
+        if (noOfSections <= 1) {
+            throw new IllegalArgumentException("Number of sections for test object must be greater than one");
+        }
+
         this.path = path;
         this.client = client;
         this.size = size;
@@ -119,13 +212,29 @@ public class RangeJoiningInputStream extends InputStream {
 
     }
 
-    RangeJoiningInputStream(final String path,
-                            final MantaClient client,
-                            final long size,
+    /**
+     * Test only constructor used for constructing an instance of the stream
+     * that is based on a file input instead of a remote stream.
+     *
+     * @param size size of file
+     * @param noOfSections number of sections to split file into
+     * @param file reference to the file
+     */
+    RangeJoiningInputStream(final long size,
                             final int noOfSections,
                             final File file) {
-        this.path = path;
-        this.client = client;
+        Objects.requireNonNull(file);
+
+        if (size <= 0) {
+            throw new IllegalArgumentException("Size of test object must be greater than zero");
+        }
+
+        if (noOfSections <= 1) {
+            throw new IllegalArgumentException("Number of sections for test object must be greater than one");
+        }
+
+        this.path = null;
+        this.client = null;
         this.size = size;
         this.sections = splitIntoSections(size, noOfSections);
         this.streamSupplier = new FileSectionStreamSupplier(file);
@@ -178,15 +287,17 @@ public class RangeJoiningInputStream extends InputStream {
 
         if (read > EOF) {
             bytesRead += read;
+            return read;
         }
 
-        if (read <= EOF && currentSection < sections.length) {
+        if (currentSection < sections.length) {
             backingStream.close();
             backingStream = streamSupplier.get();
-            return read(buffer);
+
+            return backingStream.read(buffer);
         }
 
-        return read;
+        return EOF;
     }
 
     @Override
@@ -216,7 +327,7 @@ public class RangeJoiningInputStream extends InputStream {
     }
 
     @Override
-    public synchronized void mark(int readlimit) {
+    public synchronized void mark(final int readlimit) {
         throw new UnsupportedOperationException("Not supported");
     }
 
@@ -230,9 +341,17 @@ public class RangeJoiningInputStream extends InputStream {
         return false;
     }
 
+    /**
+     * Utility method that determines how many bytes are allocated to each
+     * file's section and the start and end positions of each section.
+     *
+     * @param size size of file
+     * @param noOfSections number of sections
+     * @return array of section ranges
+     */
     static Range[] splitIntoSections(final long size, final int noOfSections) {
         final Range[] sections = new Range[noOfSections];
-        final long partSize = (size / noOfSections) - 1;
+        final long partSize = (size / noOfSections);
         final long remainder = size - (partSize * noOfSections);
 
         long position = 0;
@@ -241,9 +360,9 @@ public class RangeJoiningInputStream extends InputStream {
             final long endPosition;
 
             if (i == noOfSections - 1) {
-                endPosition = position + partSize + remainder;
+                endPosition = position + partSize + remainder - 1;
             } else {
-                endPosition = position + partSize;
+                endPosition = position + partSize - 1;
             }
 
             sections[i] = new Range(startPosition, endPosition);
