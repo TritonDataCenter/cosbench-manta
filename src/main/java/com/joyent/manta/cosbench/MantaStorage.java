@@ -65,7 +65,19 @@ public class MantaStorage extends NoneStorage {
     /**
      * Flag indicating that logging is enabled.
      */
-    protected boolean logging;
+    private boolean logging;
+
+    /**
+     * Number of sections in which to download files. If greater than one,
+     * then multiple HTTP Range requests will be used to assemble the file.
+     */
+    private int sections;
+
+    /**
+     * Size of the object being benchmarked - used only with HTTP range request
+     * benchmarks.
+     */
+    private Integer objectSize;
 
     @Override
     public void init(final Config config, final Logger logger) {
@@ -88,6 +100,8 @@ public class MantaStorage extends NoneStorage {
 
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
         this.logging = cosbenchConfig.logging();
+        this.sections = cosbenchConfig.getNumberOfSections();
+        this.objectSize = cosbenchConfig.getObjectSize();
 
         if (cosbenchConfig.chunked() == null) {
             if (logging) {
@@ -147,7 +161,7 @@ public class MantaStorage extends NoneStorage {
     @Override
     public void createContainer(final String container, final Config config) {
         if (logging) {
-            logger.info("performing PUT at /{}", container);
+            logger.info("Performing PUT at /{}", container);
         }
 
         try {
@@ -162,7 +176,7 @@ public class MantaStorage extends NoneStorage {
     @Override
     public void deleteContainer(final String container, final Config config) {
         if (logging) {
-            logger.info("performing DELETE at /{}", container);
+            logger.info("Performing DELETE at /{}", container);
         }
 
         try {
@@ -189,7 +203,7 @@ public class MantaStorage extends NoneStorage {
                              final long length,
                              final Config config) {
         if (logging) {
-            logger.info("performing PUT at /{}/{}", container, object);
+            logger.info("Performing PUT at /{}/{}", container, object);
         }
 
         final String path = pathOfObject(container, object);
@@ -236,7 +250,7 @@ public class MantaStorage extends NoneStorage {
     public void deleteObject(final String container, final String object,
                              final Config config) {
         if (logging) {
-            logger.info("performing DELETE at /{}/{}", container, object);
+            logger.info("Performing DELETE at /{}/{}", container, object);
         }
 
         try {
@@ -259,13 +273,30 @@ public class MantaStorage extends NoneStorage {
 
     @Override
     public InputStream getObject(final String container, final String object, final Config config) {
-        if (logging) {
-            logger.info("performing GET at /{}/{}", container, object);
-        }
-
         try {
             final String path = pathOfObject(container, object);
-            return client.getAsInputStream(path);
+
+            if (sections == 1) {
+                if (logging) {
+                    logger.info("Performing GET at /{}/{}",
+                            container, object);
+                }
+                return client.getAsInputStream(path);
+            } else if (objectSize != null) {
+                if (logging) {
+                    logger.info("Performing GET with HTTP byte range at /{}/{}", container, object);
+                }
+
+                int size = this.objectSize;
+                return new RangeJoiningInputStream(path, client, size, sections);
+            } else {
+                String msg = "[object-size] must be set when [no-of-http-range-sections] is set";
+
+                if (logging) {
+                    logger.error(msg);
+                }
+                throw new StorageException(msg);
+            }
         } catch (Exception e) {
             if (logging) {
                 logger.error("Error error getting object", e);
@@ -280,7 +311,7 @@ public class MantaStorage extends NoneStorage {
                                   final Map<String, String> map,
                                   final Config config) {
         if (logging) {
-            logger.info("performing POST at /{}/{}", container, object);
+            logger.info("Performing POST at /{}/{}", container, object);
         }
 
         try {
@@ -307,7 +338,7 @@ public class MantaStorage extends NoneStorage {
                                               final String object,
                                               final Config config) {
         if (logging) {
-            logger.info("performing HEAD at /{}/{}", container, object);
+            logger.info("Performing HEAD at /{}/{}", container, object);
         }
 
         try {

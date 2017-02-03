@@ -191,6 +191,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     // COSBench Parameters
     // ========================================================================
 
+    /**
+     * @return true when logging is enabled (default is true)
+     */
     public boolean logging() {
         Boolean enabled = safeGetBoolean("logging",
                 "Couldn't get logging setting from COSBench config");
@@ -226,9 +229,37 @@ public class CosbenchMantaConfigContext implements ConfigContext {
                 "Couldn't get Manta directory setting from COSBench config");
     }
 
-    public Integer getNumberOfHttpByteRangeSections() {
-        return safeGetInteger("no-of-http-range-sections",
+    /**
+     * Reads the configuration and determines the number of HTTP Range requests
+     * needed to download the object. By default this returns 1 which means
+     * do not do range requests and download the file normally.
+     *
+     * @return the number of sections a file is broken into
+     */
+    public int getNumberOfSections() {
+        Integer sections = safeGetInteger("no-of-http-range-sections",
                 "Couldn't get number of http byte range sections from COSBench config");
+
+        if (sections == null) {
+            return 1;
+        }
+
+        if (sections <= 0) {
+            throw new IllegalArgumentException("Sections should be set to one or greater");
+        }
+
+        return sections;
+    }
+
+    /**
+     * Reads the configuration and finds the set size of the objects being benchmarked.
+     * This option doesn't work with random object sizes and is only used when
+     * number of sections is greater than 1.
+     *
+     * @return the number in bytes of the size of files being benchmarked
+     */
+    public Integer getObjectSize() {
+        return safeGetInteger("object-size", "Couldn't get object size from COSBench config");
     }
 
     /**
