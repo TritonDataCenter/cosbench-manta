@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
  - Upgraded Java Manta driver library to 3.0.0.
  - Removed chunked encoding configuration option.
+ - Added HTTP range testing support.
  
 ## [1.0.7] - 2016-11-17
 ### Changed

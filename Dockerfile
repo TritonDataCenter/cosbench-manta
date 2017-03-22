@@ -6,10 +6,11 @@ FROM azul/zulu-openjdk-debian:8
 MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
+ENV _JAVA_OPTIONS=-Dcom.twmacinta.util.MD5.NATIVE_LIB_FILE=/opt/cosbench/lib/arch/linux_amd64/MD5.so
 ENV COSBENCH_VERSION 0.4.2.c4
 ENV COSBENCH_CHECKSUM abe837ffce3d6f094816103573433f5358c0b27ce56f414a60dceef985750397
 ENV COSBENCH_MANTA_VERSION 1.1.0-SNAPSHOT
-ENV COSBENCH_MANTA_CHECKSUM 3cd52a4b86f6d186c0cd2e4e5fed83bda67b6bbf7fe020d3c17d59d0e1115d1f
+ENV COSBENCH_MANTA_CHECKSUM 18c2331eede0972b9a80471c4fa8c956206b84af481543082b001f6da50387d7
 ENV CONTAINERPILOT_VER 2.6.0
 ENV CONTAINERPILOT file:///etc/containerpilot.json
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
@@ -34,13 +35,15 @@ LABEL org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" 
 # htop:               for analyzing cosbench performance (could be removed)
 # netcat-traditional: for starting cosbench OSGI services
 # dc:                 for calculating performance settings
+# libnss3             Native crypto tools for improving JVM crypo performance
 # ==============================================================================
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -qq update && \
     apt-get -qy upgrade && \
     apt-get install --no-install-recommends -qy openssh-client curl ca-certificates vim \
-                                                unzip htop netcat-traditional dc less && \
+                                                unzip htop netcat-traditional dc less \
+                                                libnss3 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
            /tmp/* \
@@ -92,10 +95,10 @@ RUN export CONTAINERPILOT_CHECKSUM=c1bcd137fadd26ca2998eec192d04c08f62beb1f \
     && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
     && rm /tmp/containerpilot.tar.gz
 
-
-# Adding machine sizing utility useful when on Triton
-COPY docker_build/usr/local/bin /usr/local/bin
+COPY docker_build/usr /usr
 RUN chmod +x /usr/local/bin/proclimit
+
+COPY docker_build/etc /etc
 
 # Adding sample Manta configuration, init files and customized configuration
 COPY docker_build/opt/cosbench /opt/cosbench
