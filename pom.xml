@@ -94,6 +94,7 @@
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
         <dependency.testng.version>6.10</dependency.testng.version>
         <dependency.commons-lang.version>3.5</dependency.commons-lang.version>
+        <dependency.commons-io.version>2.5</dependency.commons-io.version>
     </properties>
 
     <repositories>
@@ -171,6 +172,12 @@
             <artifactId>commons-lang3</artifactId>
             <version>${dependency.commons-lang.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${dependency.commons-io.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

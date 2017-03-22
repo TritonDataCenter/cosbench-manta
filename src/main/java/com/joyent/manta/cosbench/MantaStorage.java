@@ -15,12 +15,10 @@ import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 import com.joyent.manta.http.MantaHttpHeaders;
-import com.joyent.manta.http.signature.Signer;
-import com.joyent.manta.http.signature.ThreadLocalSigner;
+import org.apache.commons.io.input.AutoCloseInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.Signature;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -122,8 +120,6 @@ public class MantaStorage extends NoneStorage {
             }
             this.chunked = cosbenchConfig.chunked();
         }
-
-        logSignerImplementation(!context.disableNativeSignatures());
 
         if (logging) {
             logger.info(String.format("Client configuration: %s",
@@ -273,6 +269,8 @@ public class MantaStorage extends NoneStorage {
 
     @Override
     public InputStream getObject(final String container, final String object, final Config config) {
+        final InputStream objectStream;
+
         try {
             final String path = pathOfObject(container, object);
 
@@ -281,14 +279,14 @@ public class MantaStorage extends NoneStorage {
                     logger.info("Performing GET at /{}/{}",
                             container, object);
                 }
-                return client.getAsInputStream(path);
+                objectStream = client.getAsInputStream(path);
             } else if (objectSize != null) {
                 if (logging) {
                     logger.info("Performing GET with HTTP byte range at /{}/{}", container, object);
                 }
 
                 int size = this.objectSize;
-                return new RangeJoiningInputStream(path, client, size, sections);
+                objectStream = new RangeJoiningInputStream(path, client, size, sections);
             } else {
                 String msg = "[object-size] must be set when [no-of-http-range-sections] is set";
 
@@ -370,36 +368,6 @@ public class MantaStorage extends NoneStorage {
     @Override
     public void abort() {
         client.closeQuietly();
-    }
-
-    /**
-     * Logs the current HTTP signatures signer implementation. This method is
-     * useful for telling us if the native code signer was loaded.
-     *
-     * @param nativeSignaturesEnabled flag indicating if native signatures are enabled
-     */
-    private void logSignerImplementation(final boolean nativeSignaturesEnabled) {
-        ThreadLocalSigner threadLocalSigner = null;
-
-        try {
-            threadLocalSigner = new ThreadLocalSigner(nativeSignaturesEnabled);
-            Signer signer = threadLocalSigner.get();
-            Signature signature = signer.getSignature();
-            String msg = String.format("HTTP signature signer algorithm [%s] ",
-                    signature.getAlgorithm());
-
-            if (logging) {
-                logger.info(msg);
-            }
-        } catch (RuntimeException e) {
-            if (logging) {
-                logger.error("Error getting HTTP signatures signing implementation", e);
-            }
-        } finally {
-            if (threadLocalSigner != null) {
-                threadLocalSigner.remove();
-            }
-        }
     }
 
     /**
