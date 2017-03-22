@@ -15,7 +15,6 @@ import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 import com.joyent.manta.http.MantaHttpHeaders;
-import org.apache.commons.io.input.AutoCloseInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -301,6 +300,8 @@ public class MantaStorage extends NoneStorage {
             }
             throw new StorageException(e);
         }
+
+        return objectStream;
     }
 
     @Override
