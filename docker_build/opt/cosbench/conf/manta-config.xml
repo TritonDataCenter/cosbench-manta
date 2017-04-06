@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <workload name="manta-sample" description="sample benchmark for manta">
 
-  <storage type="manta" config="" />
+  <storage type="manta" config="chunked=false;manta.retries=0;manta.verify_uploads=false;" />
 
   <workflow>
 

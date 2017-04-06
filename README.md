@@ -35,36 +35,62 @@ in the config element of the workload configuration. In addition to those proper
 
 *Java Manta Properties*
 
-| Default                              | System Property           |
-|--------------------------------------|---------------------------|
-| https://us-east.manta.joyent.com:443 | manta.url                 |
-|                                      | manta.user                |
-|                                      | manta.key_id              |
-|                                      | manta.key_path            |
-|                                      | manta.key_content         |
-|                                      | manta.password            |
-| 20000                                | manta.timeout             |
-| 3 (6 for integration tests)          | manta.retries             |
-| 24                                   | manta.max_connections     |
-| ApacheHttpTransport                  | manta.http_transport      |
-| TLSv1.2                              | https.protocols           |
-| <see java-manta code>                | https.cipherSuites        |
-| false                                | manta.no_auth             |
-| false                                | manta.disable_native_sigs |
-| 0                                    | http.signature.cache.ttl  |
+| Default                              | System Property                    |
+|--------------------------------------|------------------------------------|
+| https://us-east.manta.joyent.com:443 | manta.url                          |
+|                                      | manta.user                         |
+|                                      | manta.key_id                       |
+|                                      | manta.key_path                     |
+|                                      | manta.key_content                  |
+|                                      | manta.password                     |
+| 20000                                | manta.timeout                      |
+| 3 (6 for integration tests)          | manta.retries                      |
+| 24                                   | manta.max_connections              |
+| 8192                                 | manta.http_buffer_size             |
+| TLSv1.2                              | https.protocols                    |
+| <see java-manta code>                | https.cipherSuites                 |
+| false                                | manta.no_auth                      |
+| false                                | manta.disable_native_sigs          |
+| 10000                                | manta.tcp_socket_timeout           |
+| true                                 | manta.verify_uploads               |
+| 16384                                | manta.upload_buffer_size           |
+| 16384                                | manta.upload_buffer_size           |
+| false                                | manta.client_encryption            |
+|                                      | manta.encryption_key_id            |
+| AES/CTR/NoPadding                    | manta.encryption_algorithm         |
+| false                                | manta.permit_unencrypted_downloads |
+| Mandatory                            | manta.encryption_auth_mode         |
+|                                      | manta.encryption_key_path          |
+|                                      | manta.encryption_key_bytes         |                                |
+|                                      | manta.encryption_key_bytes_base64  |
 
 *COSBench Properties*
 
 | Default                              | System Property           |
 |--------------------------------------|---------------------------|
+| true                                 | logging                   |
+| 1                                    | no-of-http-range-sections |
+|                                      | object-size               |
 | 2                                    | durability-level          |
 | false                                | chunked                   |
+| stor/cosbench                        | manta-directory           |
 
-For benchmarking purposes, changing `chunked`, `durability-level`, `http.signature.native.rsa`, 
-`http.signature.cache.ttl`, `manta.http_transport` or `https.cipherSuites` can have an impact on
-overall performance. In particular, experimenting with enabling `http.signature.cache.ttl` may
-result in higher overall throughput but it may result in a higher error rate. This is why it is
-turned off by default.
+For benchmarking purposes, changing `chunked`, `durability-level`, 
+`http.signature.native.rsa`, `manta.http_buffer_size`, `manta.verify_uploads`,
+`manta.upload_buffer_size` or `https.cipherSuites` can have an impact 
+on overall performance.
+
+### Testing HTTP Range Requests
+
+If you want to test the performance of HTTP byte range requests, you will need
+to set the COSBench property `no-of-http-range-sections` to a value greater
+than one **and** set the property `object-size` to the size of object you are
+testing (this is redundant information, but there is no way for the Manta 
+Adaptor to get the information from COSBench). The property 
+`no-of-http-range-sections` indicates the number of separate HTTP range requests
+to make in order to download a single file.
+
+### Testing Client Side Encryption
 
 ## Docker Stand Alone
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled

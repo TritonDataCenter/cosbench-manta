@@ -4,7 +4,7 @@
 
     <groupId>com.joyent.manta</groupId>
     <artifactId>cosbench-manta</artifactId>
-    <version>1.0.8-SNAPSHOT</version>
+    <version>1.1.0</version>
     <packaging>bundle</packaging>
 
     <name>cosbench-manta</name>
@@ -88,10 +88,13 @@
         <maven-surefire-plugin.version>2.19</maven-surefire-plugin.version>
         <!-- Dependency versions -->
         <dependency.checkstyle.version>6.12.1</dependency.checkstyle.version>
-        <dependency.java-manta.version>2.7.1</dependency.java-manta.version>
+        <dependency.java-manta.version>3.0.0</dependency.java-manta.version>
         <dependency.slf4j-log4j12.version>1.7.21</dependency.slf4j-log4j12.version>
         <dependency.osgi4.version>1.0</dependency.osgi4.version>
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
+        <dependency.testng.version>6.10</dependency.testng.version>
+        <dependency.commons-lang.version>3.5</dependency.commons-lang.version>
+        <dependency.commons-io.version>2.5</dependency.commons-io.version>
     </properties>
 
     <repositories>
@@ -152,6 +155,29 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${dependency.testng.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>junit</artifactId>
+                    <groupId>junit</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${dependency.commons-lang.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${dependency.commons-io.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -4,7 +4,9 @@ import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
 import com.joyent.manta.config.ConfigContext;
+import com.joyent.manta.config.EncryptionAuthenticationMode;
 import com.joyent.manta.config.MapConfigContext;
+import org.bouncycastle.util.encoders.Base64;
 
 /**
  * Cosbench specific implementation of {@link ConfigContext} that allows us
@@ -86,9 +88,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
-    public String getHttpTransport() {
-        return safeGetString(MapConfigContext.MANTA_HTTP_TRANSPORT_KEY,
-                "Couldn't get http transport from COSBench config");
+    public Integer getHttpBufferSize() {
+        return safeGetInteger(MapConfigContext.MANTA_HTTP_BUFFER_SIZE_KEY,
+                "Couldn't get http buffer size from COSBench config");
     }
 
     @Override
@@ -116,17 +118,91 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
-    public Integer getSignatureCacheTTL() {
-        return safeGetInteger(MapConfigContext.MANTA_SIGS_CACHE_TTL_KEY,
-                "Couldn't get http signatures cache ttl from COSBench config");
+    public Integer getTcpSocketTimeout() {
+        return safeGetInteger(MapConfigContext.MANTA_TCP_SOCKET_TIMEOUT_KEY,
+                "Couldn't get TCP socket timeout from COSBench config");
     }
 
+    @Override
+    public Boolean verifyUploads() {
+        return safeGetBoolean(MapConfigContext.MANTA_VERIFY_UPLOADS_KEY,
+                "Couldn't get verify uploads flag from COSBench config");
+    }
+
+    @Override
+    public Integer getUploadBufferSize() {
+        return safeGetInteger(MapConfigContext.MANTA_UPLOAD_BUFFER_SIZE_KEY,
+                "Couldn't get upload buffer size from COSBench config");
+    }
+
+    @Override
+    public Boolean isClientEncryptionEnabled() {
+        return safeGetBoolean(MapConfigContext.MANTA_CLIENT_ENCRYPTION_ENABLED_KEY,
+                "Couldn't get encryption enabled boolean flag");
+    }
+
+    @Override
+    public Boolean permitUnencryptedDownloads() {
+        return safeGetBoolean(MapConfigContext.MANTA_PERMIT_UNENCRYPTED_DOWNLOADS_KEY,
+                "Couldn't get permit unencrypted downloads boolean flag");
+    }
+
+    @Override
+    public String getEncryptionKeyId() {
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_KEY_ID_KEY,
+                "Couldn't get encryption key id");
+    }
+
+    @Override
+    public String getEncryptionAlgorithm() {
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_ALGORITHM_KEY,
+                "Could'nt get encryption algorithm");
+    }
+
+    @Override
+    public EncryptionAuthenticationMode getEncryptionAuthenticationMode() {
+        EncryptionAuthenticationMode mode = safeGetEnum(
+                MapConfigContext.MANTA_ENCRYPTION_AUTHENTICATION_MODE_KEY,
+                "Couldn't get object authentication mode",
+                EncryptionAuthenticationMode.class);
+
+        return mode;
+    }
+
+    @Override
+    public String getEncryptionPrivateKeyPath() {
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_PRIVATE_KEY_PATH_KEY,
+                "Couldn't get client-side encryption private key path");
+    }
+
+    @Override
+    public byte[] getEncryptionPrivateKeyBytes() {
+        String base64 = safeGetString(MapConfigContext.MANTA_ENCRYPTION_PRIVATE_KEY_BYTES_BASE64_KEY,
+                "Couldn't get client-side encryption private key base64 data");
+
+        if (base64 != null) {
+            return Base64.decode(base64);
+        } else {
+            return null;
+        }
+    }
+
+    // ========================================================================
+    // COSBench Parameters
+    // ========================================================================
+
     /**
-     * @return when true chunk encoding is enabled
+     * @return true when logging is enabled (default is true)
      */
-    public Boolean useChunking() {
-        return safeGetBoolean("chunked",
-                "Couldn't get chunking setting from COSBench config");
+    public boolean logging() {
+        Boolean enabled = safeGetBoolean("logging",
+                "Couldn't get logging setting from COSBench config");
+
+        if (enabled == null) {
+            return true;
+        } else {
+            return enabled;
+        }
     }
 
     /**
@@ -135,6 +211,55 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public Integer getDurabilityLevel() {
         return safeGetInteger("durability-level",
                 "Couldn't get durability level setting from COSBench config");
+    }
+
+    /**
+     * @return when true chunk encoding is enabled
+     */
+    public Boolean chunked() {
+        return safeGetBoolean("chunked",
+                "Couldn't get chunked setting from COSBench config");
+    }
+
+    /**
+     * @return the base directory under the home directory in Manta to write test data
+     */
+    public String getBaseDirectory() {
+        return safeGetString("manta-directory",
+                "Couldn't get Manta directory setting from COSBench config");
+    }
+
+    /**
+     * Reads the configuration and determines the number of HTTP Range requests
+     * needed to download the object. By default this returns 1 which means
+     * do not do range requests and download the file normally.
+     *
+     * @return the number of sections a file is broken into
+     */
+    public int getNumberOfSections() {
+        Integer sections = safeGetInteger("no-of-http-range-sections",
+                "Couldn't get number of http byte range sections from COSBench config");
+
+        if (sections == null) {
+            return 1;
+        }
+
+        if (sections <= 0) {
+            throw new IllegalArgumentException("Sections should be set to one or greater");
+        }
+
+        return sections;
+    }
+
+    /**
+     * Reads the configuration and finds the set size of the objects being benchmarked.
+     * This option doesn't work with random object sizes and is only used when
+     * number of sections is greater than 1.
+     *
+     * @return the number in bytes of the size of files being benchmarked
+     */
+    public Integer getObjectSize() {
+        return safeGetInteger("object-size", "Couldn't get object size from COSBench config");
     }
 
     /**
@@ -186,6 +311,32 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     private Boolean safeGetBoolean(final String key, final String message) {
         try {
             return Boolean.parseBoolean(config.get(key));
+        } catch (RuntimeException e) {
+            logger.trace(message, e);
+            return null;
+        }
+    }
+
+    /**
+     * Utility method to checks for the presence of an Enum value in the
+     * COSBench configuration and then returns the value if found.
+     *
+     * @param key key to check for
+     * @param message message to display when value isn't present
+     * @param enumClass enum class to parse as
+     * @param <T> enum type
+     * @return enum instance matching the value of the key
+     */
+    private  <T extends Enum<T>> T safeGetEnum(final String key, final String message,
+                                               final Class<T> enumClass) {
+        try {
+            String value = config.get(key);
+
+            if (value == null) {
+                return null;
+            }
+
+            return Enum.valueOf(enumClass, value);
         } catch (RuntimeException e) {
             logger.trace(message, e);
             return null;

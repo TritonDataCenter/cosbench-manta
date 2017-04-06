@@ -6,15 +6,24 @@ FROM azul/zulu-openjdk-debian:8
 MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
-ENV COSBENCH_VERSION 0.4.2.c3
-ENV COSBENCH_CHECKSUM 684b39a590a144360d8defb6c9755f69657830dbe1d54ca40fdb74c2b57793aa
-ENV COSBENCH_MANTA_VERSION 1.0.7
-ENV COSBENCH_MANTA_CHECKSUM 3c205a288f4726f44f536c888f3b8bd13ccf54fb282e43dc5f3c8ab90decc23a
-ENV CONTAINERPILOT_VER 2.4.4
+ENV _JAVA_OPTIONS=-Dcom.twmacinta.util.MD5.NATIVE_LIB_FILE=/opt/cosbench/lib/arch/linux_amd64/MD5.so
+ENV COSBENCH_VERSION 0.4.2.c4
+ENV COSBENCH_CHECKSUM abe837ffce3d6f094816103573433f5358c0b27ce56f414a60dceef985750397
+ENV COSBENCH_MANTA_VERSION 1.1.0
+ENV COSBENCH_MANTA_CHECKSUM f317cb61e66b5254132b5db7426a01bb1888de18ffc8fccf28908cbfd2f823ff
+ENV CONTAINERPILOT_VER 2.6.0
 ENV CONTAINERPILOT file:///etc/containerpilot.json
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
 ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
 ENV MODE unknown
+
+# Metadata for Docker containers: http://label-schema.org/
+LABEL org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" \
+      org.label-schema.description="COSBench with Manta Support" \
+      org.label-schema.url="https://github.com/joyent/cosbench-manta" \
+      org.label-schema.vcs-url="org.label-schema.vcs-ref" \
+      org.label-schema.vendor="Joyent" \
+      org.label-schema.schema-version="1.0"
 
 # Installed tools:
 # ==============================================================================
@@ -26,17 +35,25 @@ ENV MODE unknown
 # htop:               for analyzing cosbench performance (could be removed)
 # netcat-traditional: for starting cosbench OSGI services
 # dc:                 for calculating performance settings
+# libnss3             Native crypto tools for improving JVM crypo performance
 # ==============================================================================
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -qq update && \
     apt-get -qy upgrade && \
     apt-get install --no-install-recommends -qy openssh-client curl ca-certificates vim \
-                                                unzip htop netcat-traditional dc && \
+                                                unzip htop netcat-traditional dc less \
+                                                libnss3 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
            /tmp/* \
            /var/tmp/*
+
+# Install cryptographic extensions
+RUN curl --retry 6 -Ls "http://www.azulsystems.com/sites/default/files/images/ZuluJCEPolicies.zip" > /tmp/ZuluJCEPolicies.zip && \
+    echo '8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  /tmp/ZuluJCEPolicies.zip' | sha256sum -c && \
+    unzip -o -j /tmp/ZuluJCEPolicies.zip ZuluJCEPolicies/local_policy.jar ZuluJCEPolicies/US_export_policy.jar -d $JAVA_HOME/jre/lib/security && \
+    rm /tmp/ZuluJCEPolicies.zip
 
 # Download and install Cosbench
 RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/download/v${COSBENCH_VERSION}/${COSBENCH_VERSION}.zip" > /tmp/cosbench.zip && \
@@ -47,7 +64,6 @@ RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/downloa
 
 # Download and install the Manta adaptor
 RUN curl --retry 6 -Ls "https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar" > /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
-    sha256sum /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
     echo "${COSBENCH_MANTA_CHECKSUM}  /opt/cosbench/osgi/plugins/cosbench-manta.jar" | sha256sum -c
 
 # Install Consul
@@ -72,17 +88,17 @@ RUN export CONSUL_TEMPLATE_VERSION=0.14.0 \
 # Create empty directories for Consul config and data
 RUN mkdir -p /etc/consul && mkdir -p /var/lib/consul
 
-RUN export CONTAINERPILOT_CHECKSUM=6194ee482dae95844046266dcec2150655ef80e9 \
+RUN export CONTAINERPILOT_CHECKSUM=c1bcd137fadd26ca2998eec192d04c08f62beb1f \
     && curl -Lso /tmp/containerpilot.tar.gz \
          "https://github.com/joyent/containerpilot/releases/download/${CONTAINERPILOT_VER}/containerpilot-${CONTAINERPILOT_VER}.tar.gz" \
     && echo "${CONTAINERPILOT_CHECKSUM}  /tmp/containerpilot.tar.gz" | sha1sum -c \
     && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
     && rm /tmp/containerpilot.tar.gz
 
-
-# Adding machine sizing utility useful when on Triton
-COPY docker_build/usr/local/bin /usr/local/bin
+COPY docker_build/usr /usr
 RUN chmod +x /usr/local/bin/proclimit
+
+COPY docker_build/etc /etc
 
 # Adding sample Manta configuration, init files and customized configuration
 COPY docker_build/opt/cosbench /opt/cosbench
