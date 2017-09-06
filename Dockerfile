@@ -11,7 +11,7 @@ ENV COSBENCH_VERSION 0.4.2.c4
 ENV COSBENCH_CHECKSUM abe837ffce3d6f094816103573433f5358c0b27ce56f414a60dceef985750397
 ENV COSBENCH_MANTA_VERSION 1.1.0
 ENV COSBENCH_MANTA_CHECKSUM f317cb61e66b5254132b5db7426a01bb1888de18ffc8fccf28908cbfd2f823ff
-ENV CONTAINERPILOT_VER 2.6.0
+ENV CONTAINERPILOT_VER 2.7.8
 ENV CONTAINERPILOT file:///etc/containerpilot.json
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
 ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
@@ -68,8 +68,8 @@ RUN curl --retry 6 -Ls "https://github.com/joyent/cosbench-manta/releases/downlo
 
 # Install Consul
 # Releases at https://releases.hashicorp.com/consul
-RUN export CONSUL_VERSION=0.7.0 \
-    && export CONSUL_CHECKSUM=b350591af10d7d23514ebaa0565638539900cdb3aaa048f077217c4c46653dd8 \
+RUN export CONSUL_VERSION=0.9.2 \
+    && export CONSUL_CHECKSUM=0a2921fc7ca7e4702ef659996476310879e50aeeecb5a205adfdbe7bd8524013 \
     && curl --retry 7 --fail -vo /tmp/consul.zip "https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip" \
     && echo "${CONSUL_CHECKSUM}  /tmp/consul.zip" | sha256sum -c \
     && unzip /tmp/consul -d /usr/local/bin \
@@ -78,8 +78,8 @@ RUN export CONSUL_VERSION=0.7.0 \
 
 # Install Consul template
 # Releases at https://releases.hashicorp.com/consul-template/
-RUN export CONSUL_TEMPLATE_VERSION=0.14.0 \
-    && export CONSUL_TEMPLATE_CHECKSUM=7c70ea5f230a70c809333e75fdcff2f6f1e838f29cfb872e1420a63cdf7f3a78 \
+RUN export CONSUL_TEMPLATE_VERSION=0.19.2 \
+    && export CONSUL_TEMPLATE_CHECKSUM=c4bf073081a99030f45a446a11b8e9f8a4b56270b096d90b51e48f6e4416ffcc \
     && curl --retry 7 --fail -Lso /tmp/consul-template.zip "https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip" \
     && echo "${CONSUL_TEMPLATE_CHECKSUM}  /tmp/consul-template.zip" | sha256sum -c \
     && unzip /tmp/consul-template.zip -d /usr/local/bin \
@@ -88,7 +88,7 @@ RUN export CONSUL_TEMPLATE_VERSION=0.14.0 \
 # Create empty directories for Consul config and data
 RUN mkdir -p /etc/consul && mkdir -p /var/lib/consul
 
-RUN export CONTAINERPILOT_CHECKSUM=c1bcd137fadd26ca2998eec192d04c08f62beb1f \
+RUN export CONTAINERPILOT_CHECKSUM=09158be44c3e887244581d4d019748df9fcfa93c \
     && curl -Lso /tmp/containerpilot.tar.gz \
          "https://github.com/joyent/containerpilot/releases/download/${CONTAINERPILOT_VER}/containerpilot-${CONTAINERPILOT_VER}.tar.gz" \
     && echo "${CONTAINERPILOT_CHECKSUM}  /tmp/containerpilot.tar.gz" | sha1sum -c \
