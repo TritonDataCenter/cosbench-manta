@@ -36,6 +36,7 @@ LABEL org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" 
 # netcat-traditional: for starting cosbench OSGI services
 # dc:                 for calculating performance settings
 # libnss3             Native crypto tools for improving JVM crypo performance
+# procps              Adds unix ps command
 # ==============================================================================
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
@@ -43,7 +44,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -qy upgrade && \
     apt-get install --no-install-recommends -qy openssh-client curl ca-certificates vim \
                                                 unzip htop netcat-traditional dc less \
-                                                libnss3 && \
+                                                libnss3 procps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
            /tmp/* \
