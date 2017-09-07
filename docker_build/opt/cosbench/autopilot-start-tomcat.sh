@@ -37,6 +37,7 @@ fi
 
 exec /usr/bin/java \
     ${TOMCAT_OPTS} \
+    -Dorg.osgi.framework.system.packages.extra=sun.misc,sun.reflect \
     -Dcosbench.tomcat.config=conf/$MODE-tomcat-server.xml \
     -server \
     -cp main/* org.eclipse.equinox.launcher.Main \

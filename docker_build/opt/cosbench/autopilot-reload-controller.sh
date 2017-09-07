@@ -6,7 +6,7 @@ CONSUL=${CONSUL:-consul}
 consul-template \
         -once \
         -dedup \
-        -consul ${CONSUL}:8500 \
+        -consul-addr ${CONSUL}:8500 \
         -template "/opt/cosbench/conf/controller.conf.ctmpl:/opt/cosbench/conf/controller.conf"
 
 if [ "$MODE" == "driver" ]; then

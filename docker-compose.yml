@@ -31,7 +31,7 @@ cosbench-controller:
 # Start with a single host which will bootstrap the cluster.
 # In production we'll want to use an HA cluster.
 consul:
-    image: consul:v0.7.0
+    image: consul:0.9.2
     restart: always
     mem_limit: 128m
     expose:
