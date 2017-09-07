@@ -9,8 +9,8 @@ ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
 ENV _JAVA_OPTIONS=-Dcom.twmacinta.util.MD5.NATIVE_LIB_FILE=/opt/cosbench/lib/arch/linux_amd64/MD5.so
 ENV COSBENCH_VERSION 0.4.2.c4
 ENV COSBENCH_CHECKSUM abe837ffce3d6f094816103573433f5358c0b27ce56f414a60dceef985750397
-ENV COSBENCH_MANTA_VERSION 1.1.0
-ENV COSBENCH_MANTA_CHECKSUM f317cb61e66b5254132b5db7426a01bb1888de18ffc8fccf28908cbfd2f823ff
+ENV COSBENCH_MANTA_VERSION 1.1.1
+ENV COSBENCH_MANTA_CHECKSUM e40354da3d156fdc5792c3cbde84dcc9c48edb40b05e78a98d958926c1b0120f
 ENV CONTAINERPILOT_VER 2.7.8
 ENV CONTAINERPILOT file:///etc/containerpilot.json
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
@@ -50,7 +50,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
            /var/tmp/*
 
 # Install cryptographic extensions
-RUN curl --retry 6 -Ls "http://www.azulsystems.com/sites/default/files/images/ZuluJCEPolicies.zip" > /tmp/ZuluJCEPolicies.zip && \
+RUN curl --retry 6 -Ls "http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip" > /tmp/ZuluJCEPolicies.zip && \
     echo '8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  /tmp/ZuluJCEPolicies.zip' | sha256sum -c && \
     unzip -o -j /tmp/ZuluJCEPolicies.zip ZuluJCEPolicies/local_policy.jar ZuluJCEPolicies/US_export_policy.jar -d $JAVA_HOME/jre/lib/security && \
     rm /tmp/ZuluJCEPolicies.zip

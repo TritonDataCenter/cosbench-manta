@@ -45,7 +45,10 @@ echo "Launching osgi framwork ... "
 
 # Tomcat is now being managed by ContainerPilot
 if [ -n "$(pgrep java)" ]; then
-    /usr/bin/nohup java -Dcosbench.tomcat.config=$TOMCAT_CONFIG -server -cp main/* org.eclipse.equinox.launcher.Main -configuration $OSGI_CONFIG -console $OSGI_CONSOLE_PORT 1> $BOOT_LOG 2>&1 &
+    /usr/bin/nohup java -Dorg.osgi.framework.system.packages.extra=sun.misc,sun.reflect \
+                        -Dcosbench.tomcat.config=$TOMCAT_CONFIG \
+                        -server -cp main/* org.eclipse.equinox.launcher.Main \
+                        -configuration $OSGI_CONFIG -console $OSGI_CONSOLE_PORT 1> $BOOT_LOG 2>&1 &
 fi
 
 if [ $? -ne 0 ];

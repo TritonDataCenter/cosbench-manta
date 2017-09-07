@@ -43,7 +43,10 @@ mkdir -p log
 
 echo "Launching osgi framwork ... "
 
-/usr/bin/nohup java -Dcosbench.tomcat.config=$TOMCAT_CONFIG -server -cp main/* org.eclipse.equinox.launcher.Main -configuration $OSGI_CONFIG -console $OSGI_CONSOLE_PORT 1> $BOOT_LOG 2>&1 &
+/usr/bin/nohup java -Dorg.osgi.framework.system.packages.extra=sun.misc,sun.reflect \
+                    -Dcosbench.tomcat.config=$TOMCAT_CONFIG \
+                    -server -cp main/* org.eclipse.equinox.launcher.Main \
+                    -configuration $OSGI_CONFIG -console $OSGI_CONSOLE_PORT 1> $BOOT_LOG 2>&1 &
 
 if [ $? -ne 0 ];
 then

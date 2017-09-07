@@ -213,6 +213,16 @@ should see the drivers appear.
 You now can dynamically scale many COSBench drivers. However, you will only have
 a single controller node.
 
+## OSGI Notes
+
+You will need to add the following system property to the Java command that starts the OSGI
+framework in order for the COSBench driver for Manta to work:
+
+```
+org.osgi.framework.system.packages.extra=sun.misc,sun.reflect
+
+```
+
 ## Contributions
 
 Contributions welcome! Please ensure that `# mvn checkstyle:checkstyle -Dcheckstyle.skip=false` runs
