@@ -9,8 +9,8 @@ import com.joyent.manta.config.MapConfigContext;
 import org.bouncycastle.util.encoders.Base64;
 
 /**
- * Cosbench specific implementation of {@link ConfigContext} that allows us
- * to connect Cosbench config seamlessly.
+ * Cosbench specific implementation of {@link ConfigContext} that allows us to
+ * connect Cosbench config seamlessly.
  *
  * @author <a href="https://github.com/dekobon">Elijah Zupancic</a>
  */
@@ -27,7 +27,8 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     /**
      * Default constructor that wraps a Cosbench config instance.
-     * @param config cosbench config instance
+     * @param config
+     *            cosbench config instance
      */
     public CosbenchMantaConfigContext(final Config config) {
         this.config = config;
@@ -35,26 +36,22 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     @Override
     public String getMantaURL() {
-        return safeGetString(MapConfigContext.MANTA_URL_KEY,
-                "Couldn't get url from COSBench config");
+        return safeGetString(MapConfigContext.MANTA_URL_KEY, "Couldn't get url from COSBench config");
     }
 
     @Override
     public String getMantaUser() {
-        return safeGetString(MapConfigContext.MANTA_USER_KEY,
-                "Couldn't get username from COSBench config");
+        return safeGetString(MapConfigContext.MANTA_USER_KEY, "Couldn't get username from COSBench config");
     }
 
     @Override
     public String getMantaKeyId() {
-        return safeGetString(MapConfigContext.MANTA_KEY_ID_KEY,
-                "Couldn't get fingerprint from COSBench config");
+        return safeGetString(MapConfigContext.MANTA_KEY_ID_KEY, "Couldn't get fingerprint from COSBench config");
     }
 
     @Override
     public String getMantaKeyPath() {
-        return safeGetString(MapConfigContext.MANTA_KEY_PATH_KEY,
-                "Couldn't get key_path from COSBench config");
+        return safeGetString(MapConfigContext.MANTA_KEY_PATH_KEY, "Couldn't get key_path from COSBench config");
     }
 
     @Override
@@ -65,20 +62,17 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     @Override
     public String getPassword() {
-        return safeGetString(MapConfigContext.MANTA_PASSWORD_KEY,
-                "Couldn't get password from COSBench config");
+        return safeGetString(MapConfigContext.MANTA_PASSWORD_KEY, "Couldn't get password from COSBench config");
     }
 
     @Override
     public Integer getTimeout() {
-        return safeGetInteger(MapConfigContext.MANTA_TIMEOUT_KEY,
-                "Couldn't get timeout from COSBench config");
+        return safeGetInteger(MapConfigContext.MANTA_TIMEOUT_KEY, "Couldn't get timeout from COSBench config");
     }
 
     @Override
     public Integer getRetries() {
-        return safeGetInteger(MapConfigContext.MANTA_RETRIES_KEY,
-                "Couldn't get retries from COSBench config");
+        return safeGetInteger(MapConfigContext.MANTA_RETRIES_KEY, "Couldn't get retries from COSBench config");
     }
 
     @Override
@@ -107,8 +101,7 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     @Override
     public Boolean noAuth() {
-        return safeGetBoolean(MapConfigContext.MANTA_NO_AUTH_KEY,
-                "Couldn't get no auth setting from COSBench config");
+        return safeGetBoolean(MapConfigContext.MANTA_NO_AUTH_KEY, "Couldn't get no auth setting from COSBench config");
     }
 
     @Override
@@ -149,22 +142,18 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     @Override
     public String getEncryptionKeyId() {
-        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_KEY_ID_KEY,
-                "Couldn't get encryption key id");
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_KEY_ID_KEY, "Couldn't get encryption key id");
     }
 
     @Override
     public String getEncryptionAlgorithm() {
-        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_ALGORITHM_KEY,
-                "Could'nt get encryption algorithm");
+        return safeGetString(MapConfigContext.MANTA_ENCRYPTION_ALGORITHM_KEY, "Could'nt get encryption algorithm");
     }
 
     @Override
     public EncryptionAuthenticationMode getEncryptionAuthenticationMode() {
-        EncryptionAuthenticationMode mode = safeGetEnum(
-                MapConfigContext.MANTA_ENCRYPTION_AUTHENTICATION_MODE_KEY,
-                "Couldn't get object authentication mode",
-                EncryptionAuthenticationMode.class);
+        EncryptionAuthenticationMode mode = safeGetEnum(MapConfigContext.MANTA_ENCRYPTION_AUTHENTICATION_MODE_KEY,
+                "Couldn't get object authentication mode", EncryptionAuthenticationMode.class);
 
         return mode;
     }
@@ -195,8 +184,7 @@ public class CosbenchMantaConfigContext implements ConfigContext {
      * @return true when logging is enabled (default is true)
      */
     public boolean logging() {
-        Boolean enabled = safeGetBoolean("logging",
-                "Couldn't get logging setting from COSBench config");
+        Boolean enabled = safeGetBoolean("logging", "Couldn't get logging setting from COSBench config");
 
         if (enabled == null) {
             return true;
@@ -209,30 +197,48 @@ public class CosbenchMantaConfigContext implements ConfigContext {
      * @return the number of copies to store of an object
      */
     public Integer getDurabilityLevel() {
-        return safeGetInteger("durability-level",
-                "Couldn't get durability level setting from COSBench config");
+        return safeGetInteger("durability-level", "Couldn't get durability level setting from COSBench config");
     }
 
     /**
      * @return when true chunk encoding is enabled
      */
     public Boolean chunked() {
-        return safeGetBoolean("chunked",
-                "Couldn't get chunked setting from COSBench config");
+        return safeGetBoolean("chunked", "Couldn't get chunked setting from COSBench config");
     }
 
     /**
-     * @return the base directory under the home directory in Manta to write test data
+     * @return the base directory under the home directory in Manta to write
+     *         test data
      */
     public String getBaseDirectory() {
-        return safeGetString("manta-directory",
-                "Couldn't get Manta directory setting from COSBench config");
+        return safeGetString("manta-directory", "Couldn't get Manta directory setting from COSBench config");
+    }
+
+    /**
+     * @return are we going to use multi-part uplaod?
+     */
+    public boolean multipart() {
+        Boolean enabled = safeGetBoolean("multipart", "Couldn't get multipart setting from COSBench config");
+        if (enabled == null) {
+            return false;
+        } else {
+            return enabled;
+        }
+    }
+
+    /**
+     * @return are we going to use multi-part uplaod?
+     */
+    public Integer getSplitSize() {
+        return this.safeGetInteger("splitSize", "Couldn't get splitSize setting from COSBench config");
+
     }
 
     /**
      * Reads the configuration and determines the number of HTTP Range requests
-     * needed to download the object. By default this returns 1 which means
-     * do not do range requests and download the file normally.
+     * needed to download the object. By default this returns 1 which means do
+     * not do range requests and download the file normally.
      *
      * @return the number of sections a file is broken into
      */
@@ -252,9 +258,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
-     * Reads the configuration and finds the set size of the objects being benchmarked.
-     * This option doesn't work with random object sizes and is only used when
-     * number of sections is greater than 1.
+     * Reads the configuration and finds the set size of the objects being
+     * benchmarked. This option doesn't work with random object sizes and is
+     * only used when number of sections is greater than 1.
      *
      * @return the number in bytes of the size of files being benchmarked
      */
@@ -263,10 +269,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
-     * Utility method that checks for the presence of Integer values in
-     * the COSBench configuration and then returns the value if found.
-     * @param key key to check for
-     * @param message message to display when value isn't present
+     * Utility method that checks for the presence of Integer values in the
+     * COSBench configuration and then returns the value if found.
+     * @param key
+     *            key to check for
+     * @param message
+     *            message to display when value isn't present
      * @return null if not found, otherwise configuration value
      */
     private Integer safeGetInteger(final String key, final String message) {
@@ -286,10 +294,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
-     * Utility method that checks for the presence of String values in
-     * the COSBench configuration and then returns the value if found.
-     * @param key key to check for
-     * @param message message to display when value isn't present
+     * Utility method that checks for the presence of String values in the
+     * COSBench configuration and then returns the value if found.
+     * @param key
+     *            key to check for
+     * @param message
+     *            message to display when value isn't present
      * @return null if not found, otherwise configuration value
      */
     private String safeGetString(final String key, final String message) {
@@ -302,10 +312,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
-     * Utility method that checks for the presence of Boolean values in
-     * the COSBench configuration and then returns the value if found.
-     * @param key key to check for
-     * @param message message to display when value isn't present
+     * Utility method that checks for the presence of Boolean values in the
+     * COSBench configuration and then returns the value if found.
+     * @param key
+     *            key to check for
+     * @param message
+     *            message to display when value isn't present
      * @return null if not found, otherwise configuration value
      */
     private Boolean safeGetBoolean(final String key, final String message) {
@@ -321,14 +333,17 @@ public class CosbenchMantaConfigContext implements ConfigContext {
      * Utility method to checks for the presence of an Enum value in the
      * COSBench configuration and then returns the value if found.
      *
-     * @param key key to check for
-     * @param message message to display when value isn't present
-     * @param enumClass enum class to parse as
-     * @param <T> enum type
+     * @param key
+     *            key to check for
+     * @param message
+     *            message to display when value isn't present
+     * @param enumClass
+     *            enum class to parse as
+     * @param <T>
+     *            enum type
      * @return enum instance matching the value of the key
      */
-    private  <T extends Enum<T>> T safeGetEnum(final String key, final String message,
-                                               final Class<T> enumClass) {
+    private <T extends Enum<T>> T safeGetEnum(final String key, final String message, final Class<T> enumClass) {
         try {
             String value = config.get(key);
 
