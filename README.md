@@ -75,7 +75,7 @@ in the config element of the workload configuration. In addition to those proper
 | false                                | chunked                   |
 | stor/cosbench                        | manta-directory           |
 | 5242880                              | splitSize                 |
-| true                                 | multipart                 |
+| false                                | multipart                 |
 
 For benchmarking purposes, changing `chunked`, `durability-level`, 
 `http.signature.native.rsa`, `manta.http_buffer_size`, `manta.verify_uploads`,

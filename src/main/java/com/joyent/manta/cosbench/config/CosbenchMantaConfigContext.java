@@ -27,8 +27,8 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     /**
      * Default constructor that wraps a Cosbench config instance.
-     * @param config
-     *            cosbench config instance
+     *
+     * @param config cosbench config instance
      */
     public CosbenchMantaConfigContext(final Config config) {
         this.config = config;
@@ -216,9 +216,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
-     * @return are we going to use multi-part uplaod?
+     * @return Flag indicating if multipart part upload mode is enabled
      */
-    public boolean multipart() {
+    public boolean isMultipart() {
         Boolean enabled = safeGetBoolean("multipart", "Couldn't get multipart setting from COSBench config");
         if (enabled == null) {
             return false;
@@ -228,7 +228,7 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
-     * @return are we going to use multi-part uplaod?
+     * @return - An override of the default split size.
      */
     public Integer getSplitSize() {
         return this.safeGetInteger("splitSize", "Couldn't get splitSize setting from COSBench config");
@@ -271,10 +271,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     /**
      * Utility method that checks for the presence of Integer values in the
      * COSBench configuration and then returns the value if found.
-     * @param key
-     *            key to check for
-     * @param message
-     *            message to display when value isn't present
+     *
+     * @param key key to check for
+     * @param message message to display when value isn't present
      * @return null if not found, otherwise configuration value
      */
     private Integer safeGetInteger(final String key, final String message) {
@@ -296,10 +295,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     /**
      * Utility method that checks for the presence of String values in the
      * COSBench configuration and then returns the value if found.
-     * @param key
-     *            key to check for
-     * @param message
-     *            message to display when value isn't present
+     *
+     * @param key key to check for
+     * @param message message to display when value isn't present
      * @return null if not found, otherwise configuration value
      */
     private String safeGetString(final String key, final String message) {
@@ -314,10 +312,9 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     /**
      * Utility method that checks for the presence of Boolean values in the
      * COSBench configuration and then returns the value if found.
-     * @param key
-     *            key to check for
-     * @param message
-     *            message to display when value isn't present
+     *
+     * @param key key to check for
+     * @param message message to display when value isn't present
      * @return null if not found, otherwise configuration value
      */
     private Boolean safeGetBoolean(final String key, final String message) {
@@ -333,14 +330,10 @@ public class CosbenchMantaConfigContext implements ConfigContext {
      * Utility method to checks for the presence of an Enum value in the
      * COSBench configuration and then returns the value if found.
      *
-     * @param key
-     *            key to check for
-     * @param message
-     *            message to display when value isn't present
-     * @param enumClass
-     *            enum class to parse as
-     * @param <T>
-     *            enum type
+     * @param key key to check for
+     * @param message message to display when value isn't present
+     * @param enumClass enum class to parse as
+     * @param <T> enum type
      * @return enum instance matching the value of the key
      */
     private <T extends Enum<T>> T safeGetEnum(final String key, final String message, final Class<T> enumClass) {

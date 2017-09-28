@@ -2,11 +2,12 @@ package com.joyent.manta.cosbench;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
+
+import org.apache.commons.io.input.BoundedInputStream;
 
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
@@ -14,11 +15,11 @@ import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
 import com.joyent.manta.client.MantaClient;
 import com.joyent.manta.client.MantaMetadata;
-import com.joyent.manta.client.multipart.EncryptedMultipartUpload;
 import com.joyent.manta.client.multipart.EncryptedServerSideMultipartManager;
-import com.joyent.manta.client.multipart.MantaMultipartUploadTuple;
+import com.joyent.manta.client.multipart.MantaMultipartManager;
+import com.joyent.manta.client.multipart.MantaMultipartUpload;
+import com.joyent.manta.client.multipart.MantaMultipartUploadPart;
 import com.joyent.manta.client.multipart.ServerSideMultipartManager;
-import com.joyent.manta.client.multipart.ServerSideMultipartUpload;
 import com.joyent.manta.config.ChainedConfigContext;
 import com.joyent.manta.config.DefaultsConfigContext;
 import com.joyent.manta.config.EnvVarConfigContext;
@@ -28,11 +29,9 @@ import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 import com.joyent.manta.http.MantaHttpHeaders;
-import com.joyent.manta.org.apache.commons.io.IOUtils;
 
 /**
- * Manta implementation of the COSBench
- * {@link com.intel.cosbench.api.storage.StorageAPI}.
+ * Manta implementation of the COSBench {@link com.intel.cosbench.api.storage.StorageAPI}.
  *
  * @author <a href="https://github.com/dekobon">Elijah Zupancic</a>
  */
@@ -43,8 +42,7 @@ public class MantaStorage extends NoneStorage {
     private static final String DEFAULT_COSBENCH_BASE_DIR = "stor/cosbench";
 
     /**
-     * The default number of maximum HTTP connections at one time to the Manta
-     * API.
+     * The default number of maximum HTTP connections at one time to the Manta API.
      */
     private static final int MAX_CONNECTIONS = 1024;
 
@@ -89,14 +87,13 @@ public class MantaStorage extends NoneStorage {
     public static final int DEFAULT_SPLIT = 5242880;
 
     /**
-     * Number of sections in which to download files. If greater than one, then
-     * multiple HTTP Range requests will be used to assemble the file.
+     * Number of sections in which to download files. If greater than one, then multiple HTTP Range requests will be
+     * used to assemble the file.
      */
     private int sections;
 
     /**
-     * Size of the object being benchmarked - used only with HTTP range request
-     * benchmarks.
+     * Size of the object being benchmarked - used only with HTTP range request benchmarks.
      */
     private Integer objectSize;
 
@@ -119,9 +116,12 @@ public class MantaStorage extends NoneStorage {
         this.logging = cosbenchConfig.logging();
         this.sections = cosbenchConfig.getNumberOfSections();
         this.objectSize = cosbenchConfig.getObjectSize();
-        this.multipart = cosbenchConfig.multipart();
-        this.splitSize = cosbenchConfig.getSplitSize();
+        this.multipart = cosbenchConfig.isMultipart();
 
+        this.splitSize = cosbenchConfig.getSplitSize();
+        if (splitSize == null) {
+            splitSize = DEFAULT_SPLIT;
+        }
         if (cosbenchConfig.chunked() == null) {
             if (logging) {
                 logger.info("Chunked mode is disabled");
@@ -224,7 +224,6 @@ public class MantaStorage extends NoneStorage {
         } else {
             contentLength = length;
         }
-
         MantaHttpHeaders headers = new MantaHttpHeaders();
 
         try {
@@ -232,12 +231,11 @@ public class MantaStorage extends NoneStorage {
                 headers.setDurabilityLevel(durabilityLevel);
             }
             logger.info("Multipart : /{} {} ", multipart, client.getContext().isClientEncryptionEnabled());
-            // logger.info("multiupload : " + config.getBoolean("multiupload"));
             if (this.multipart) {
                 if (client.getContext().isClientEncryptionEnabled()) {
-                    multipartEncrypt(data, path);
+                    multipartUpload(data, path, new EncryptedServerSideMultipartManager(client));
                 } else {
-                    multipartUpload(data, path);
+                    multipartUpload(data, path, new ServerSideMultipartManager(client));
                 }
             } else {
                 client.put(path, data, contentLength, headers, null);
@@ -266,96 +264,39 @@ public class MantaStorage extends NoneStorage {
     }
 
     /**
-     * Method for parsing and uploading to use multipart upload.
-     * @param data - the input stream
-     * @param path - the path of
-     * @throws IOException - this has the possiblity of throwing a IOException
+     * Helper method for parsing out the streams and uploading in the multi-part way.
+     *
+     * @param data - Data stream.
+     * @param path - The path that we are going to put the object into.
+     * @param multipartManager - This will be EncryptedServerSideMultipartManager or ServerSideMultipartManager.
      */
-    private void multipartUpload(final InputStream data, final String path) throws IOException {
-        logger.debug("Client is not encrypted!");
-        ServerSideMultipartManager multipartManager = new ServerSideMultipartManager(client);
-        if (splitSize == null) {
-            splitSize = new Integer(DEFAULT_SPLIT);
-        }
-        logger.info("Object Size : " + this.objectSize);
-        logger.info("Split Size : " + splitSize);
-        int splits = objectSize / splitSize;
-        int remainder = objectSize % splitSize;
-        if (remainder > 0) {
-            splits++;
-        }
-        MantaMultipartUploadTuple[] parts = new MantaMultipartUploadTuple[splits];
-        // ServerSideMultipartUpload upload =
-        // multipartManager.initiateUpload(path);
-        ServerSideMultipartUpload upload = multipartManager.initiateUpload(path);
-
-        logger.debug("Multipart upload initiated");
-        byte[] content = IOUtils.toByteArray(data);
-        for (int i = 0; i < splits; i++) {
-            int startIndex = i * splitSize;
-            int endIndex;
-            // Parts start at 1.
-            int partNumber = i + 1;
-            if (((i + 1) * splitSize) < content.length) {
-                endIndex = partNumber * splitSize;
-            } else {
-                endIndex = content.length;
+    @SuppressWarnings("unchecked")
+    private void multipartUpload(final InputStream data, final String path,
+            @SuppressWarnings("rawtypes") final MantaMultipartManager multipartManager) {
+        MantaMultipartUpload upload = null;
+        try {
+            upload = multipartManager.initiateUpload(path);
+            logger.info("Split Size : {} ", splitSize);
+            int splits = objectSize / splitSize;
+            // Just a check to see if we should do one more split.
+            if ((objectSize % splitSize) != 0) {
+                splits++;
             }
-            logger.info("Part Number {}", partNumber);
-            logger.info("Starting copy {} ending copy {}", startIndex, endIndex);
-            byte[] partData = Arrays.copyOfRange(content, startIndex, endIndex);
-            parts[i] = multipartManager.uploadPart(upload, partNumber, partData);
-            logger.debug("grabbed the next " + splitSize + " bytes");
-        }
-        Stream<MantaMultipartUploadTuple> partsStream = Arrays.stream(parts);
-        multipartManager.complete(upload, partsStream);
-        logger.debug(path + " is now assembled and sent as a multipart stream!");
-    }
-
-    /**
-     * This will take the stream parse it into sizes defined in the config.
-     * @param data - the data stream to be parsed.
-     * @param path - the path where this will be put.
-     * @throws IOException - this is a possibility.
-     */
-    private void multipartEncrypt(final InputStream data, final String path) throws IOException {
-        logger.info("Client is encrypted!");
-        EncryptedServerSideMultipartManager multipartManager = new EncryptedServerSideMultipartManager(client);
-        EncryptedMultipartUpload<ServerSideMultipartUpload> upload = multipartManager.initiateUpload(path);
-        logger.debug("Client is not encrypted!");
-        if (splitSize == null) {
-            splitSize = new Integer(DEFAULT_SPLIT);
-        }
-        logger.info("Object Size : " + this.objectSize);
-        logger.info("Split Size : " + splitSize);
-        int splits = objectSize / splitSize;
-        int remainder = objectSize % splitSize;
-        if (remainder > 0) {
-            splits++;
-        }
-        MantaMultipartUploadTuple[] parts = new MantaMultipartUploadTuple[splits];
-        // ServerSideMultipartUpload upload =
-        // multipartManager.initiateUpload(path);
-        logger.debug("Multipart upload initiated");
-        byte[] content = IOUtils.toByteArray(data);
-        for (int i = 0; i < splits; i++) {
-            int startIndex = i * splitSize;
-            int endIndex;
-            // Parts start at 1.
-            int partNumber = i + 1;
-            if (((i + 1) * splitSize) < content.length) {
-                endIndex = partNumber * splitSize;
-            } else {
-                endIndex = content.length;
+            logger.info("Splitting file int {}", splitSize);
+            LinkedList<MantaMultipartUploadPart> parts = new LinkedList<MantaMultipartUploadPart>();
+            for (int i = 0; i < splits; i++) {
+                try (BoundedInputStream bis = new BoundedInputStream(data, objectSize)) {
+                    parts.add(multipartManager.uploadPart(upload, i + 1, bis));
+                    logger.debug("grabbed the next {} bytes", splitSize);
+                } catch (Exception e) {
+                    logger.error("Error in putting together the MPU {}", e.getMessage());
+                }
             }
-            logger.info("Part Number {}", partNumber);
-            logger.info("Starting copy {} ending copy {}", startIndex, endIndex);
-            byte[] partData = Arrays.copyOfRange(content, startIndex, endIndex);
-            parts[i] = multipartManager.uploadPart(upload, partNumber, partData);
-            logger.debug("grabbed the next " + splitSize + " bytes");
+
+            multipartManager.complete(upload, parts);
+        } catch (IOException e) {
+            logger.error("Exception when uploading file {}", e);
         }
-        Stream<MantaMultipartUploadTuple> partsStream = Arrays.stream(parts);
-        multipartManager.complete(upload, partsStream);
         logger.debug(path + " is now assembled and sent as a multipart stream!");
     }
 
@@ -486,8 +427,7 @@ public class MantaStorage extends NoneStorage {
     /**
      * Utility method that provides the directory mapping of a container.
      *
-     * @param container
-     *            container name
+     * @param container container name
      * @return directory as string
      */
     private String directoryOfContainer(final String container) {
@@ -497,10 +437,8 @@ public class MantaStorage extends NoneStorage {
     /**
      * Utility method that provides the directory mapping of an object.
      *
-     * @param container
-     *            container name
-     * @param object
-     *            object name
+     * @param container container name
+     * @param object object name
      * @return full path to object as string
      */
     private String pathOfObject(final String container, final String object) {
