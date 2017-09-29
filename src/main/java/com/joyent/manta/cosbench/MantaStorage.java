@@ -97,6 +97,16 @@ public class MantaStorage extends NoneStorage {
      */
     private Integer objectSize;
 
+    /**
+     * fdsfsdfdsfds.
+     */
+    private EncryptedServerSideMultipartManager encryptedMultipartManager;
+
+    /**
+     * fdsfsdfdsfds.
+     */
+    private ServerSideMultipartManager serverMultipartManager;
+
     @Override
     public void init(final Config config, final Logger logger) {
         logger.debug("Manta client has started initialization");
@@ -160,7 +170,6 @@ public class MantaStorage extends NoneStorage {
                 String msg = "Unable to create base test directory";
                 throw new StorageException(msg);
             }
-
         } catch (IOException e) {
             logger.error("Error in initialization", e);
             throw new StorageException(e);
@@ -169,6 +178,8 @@ public class MantaStorage extends NoneStorage {
         if (logging) {
             logger.debug("Manta client has been initialized");
         }
+        encryptedMultipartManager = new EncryptedServerSideMultipartManager(client);
+        serverMultipartManager = new ServerSideMultipartManager(client);
     }
 
     @Override
@@ -233,9 +244,9 @@ public class MantaStorage extends NoneStorage {
             logger.info("Multipart : /{} {} ", multipart, client.getContext().isClientEncryptionEnabled());
             if (this.multipart) {
                 if (client.getContext().isClientEncryptionEnabled()) {
-                    multipartUpload(data, path, new EncryptedServerSideMultipartManager(client));
+                    multipartUpload(data, path, encryptedMultipartManager);
                 } else {
-                    multipartUpload(data, path, new ServerSideMultipartManager(client));
+                    multipartUpload(data, path, serverMultipartManager);
                 }
             } else {
                 client.put(path, data, contentLength, headers, null);
