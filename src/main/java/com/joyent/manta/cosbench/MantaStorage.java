@@ -98,12 +98,12 @@ public class MantaStorage extends NoneStorage {
     private Integer objectSize;
 
     /**
-     * fdsfsdfdsfds.
+     * Multipart manager for encrypted loads.
      */
     private EncryptedServerSideMultipartManager encryptedMultipartManager;
 
     /**
-     * fdsfsdfdsfds.
+     * Multipart manager for non-encrypted loads.
      */
     private ServerSideMultipartManager serverMultipartManager;
 
