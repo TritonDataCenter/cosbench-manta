@@ -243,7 +243,6 @@ public class MantaStorage extends NoneStorage {
             if (durabilityLevel != null) {
                 headers.setDurabilityLevel(durabilityLevel);
             }
-            logger.info("Multipart : /{} {} ", multipart, client.getContext().isClientEncryptionEnabled());
             if (this.multipart) {
                 if (client.getContext().isClientEncryptionEnabled()) {
                     multipartUpload(data, path, encryptedMultipartManager);
@@ -291,28 +290,25 @@ public class MantaStorage extends NoneStorage {
             upload = multipartManager.initiateUpload(path);
             logger.info("Split Size : {} ", splitSize);
             int splits = Math.floorDiv(data.available(), splitSize);
-            logger.info("Splitting file int {} into {}", splitSize, splits);
             LinkedList<MantaMultipartUploadPart> parts = new LinkedList<MantaMultipartUploadPart>();
             int partNumber = 1;
+
             for (int i = 0; i < splits; i++) {
-                logger.info("getting the next {} bytes", splitSize);
-                data.mark(splitSize * i);
                 try (BoundedInputStream bis = new BoundedInputStream(data, splitSize)) {
-                    logger.info("Marking bytes {} ", (i * splitSize));
                     parts.add(multipartManager.uploadPart(upload, partNumber, bis));
                     partNumber++;
-                    logger.debug("grabbed the next {} bytes", splitSize);
+                    logger.info("grabbed the next {} bytes", splitSize);
                 } catch (Exception e) {
                     logger.error("Error in putting together the MPU {}", e.getMessage());
                 }
             }
+
+            logger.info("getting the next {} bytes", splitSize);
             if ((data.available() % splitSize) != 0) {
-                data.mark(splitSize * splits);
                 try (BoundedInputStream bis = new BoundedInputStream(data, data.available() % splitSize)) {
-                    bis.mark(splitSize * splits);
                     parts.add(multipartManager.uploadPart(upload, partNumber, bis));
                     partNumber++;
-                    logger.debug("grabbed the next {} bytes", splitSize);
+                    logger.info("grabbed the last {} bytes", data.available() % splitSize);
                 } catch (Exception e) {
                     logger.error("Error in putting together the MPU {}", e.getMessage());
                 }
