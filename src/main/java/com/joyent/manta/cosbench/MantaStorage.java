@@ -292,7 +292,7 @@ public class MantaStorage extends NoneStorage {
             int splits = Math.floorDiv(data.available(), splitSize);
             LinkedList<MantaMultipartUploadPart> parts = new LinkedList<MantaMultipartUploadPart>();
             int partNumber = 1;
-
+            logger.info("Number of splits : {}", splits);
             for (int i = 0; i < splits; i++) {
                 try (BoundedInputStream bis = new BoundedInputStream(data, splitSize)) {
                     parts.add(multipartManager.uploadPart(upload, partNumber, bis));
@@ -302,8 +302,6 @@ public class MantaStorage extends NoneStorage {
                     logger.error("Error in putting together the MPU {}", e.getMessage());
                 }
             }
-
-            logger.info("getting the next {} bytes", splitSize);
             if ((data.available() % splitSize) != 0) {
                 try (BoundedInputStream bis = new BoundedInputStream(data, data.available() % splitSize)) {
                     parts.add(multipartManager.uploadPart(upload, partNumber, bis));
