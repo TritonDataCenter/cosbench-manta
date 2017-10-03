@@ -300,6 +300,7 @@ public class MantaStorage extends NoneStorage {
                     logger.info("grabbed the next {} bytes", splitSize);
                 } catch (Exception e) {
                     logger.error("Error in putting together the MPU {}", e.getMessage());
+                    throw new StorageException(e);
                 }
             }
             if ((data.available() % splitSize) != 0) {
@@ -309,11 +310,13 @@ public class MantaStorage extends NoneStorage {
                     logger.info("grabbed the last {} bytes", data.available() % splitSize);
                 } catch (Exception e) {
                     logger.error("Error in putting together the MPU {}", e.getMessage());
+                    throw new StorageException(e);
                 }
             }
             multipartManager.complete(upload, parts);
         } catch (IOException e) {
             logger.error("Exception when uploading file {}", e);
+            throw new StorageException(e);
         }
         logger.debug(path + " is now assembled and sent as a multipart stream!");
     }
