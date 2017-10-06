@@ -288,18 +288,17 @@ public class MantaStorage extends NoneStorage {
         MantaMultipartUpload upload = null;
         try {
             upload = multipartManager.initiateUpload(path);
-            logger.info("Split Size : {} ", splitSize);
             int splits = Math.floorDiv(data.available(), splitSize);
             LinkedList<MantaMultipartUploadPart> parts = new LinkedList<MantaMultipartUploadPart>();
             int partNumber = 1;
-            logger.info("Number of splits : {}", splits);
             for (int i = 0; i < splits; i++) {
                 try (BoundedInputStream bis = new BoundedInputStream(data, splitSize)) {
                     parts.add(multipartManager.uploadPart(upload, partNumber, bis));
                     partNumber++;
-                    logger.info("grabbed the next {} bytes", splitSize);
                 } catch (Exception e) {
-                    logger.error("Error in putting together the MPU {}", e.getMessage());
+                    if (logging) {
+                        logger.error("Error in putting together the MPU {}", e.getMessage());
+                    }
                     throw new StorageException(e);
                 }
             }
@@ -307,18 +306,20 @@ public class MantaStorage extends NoneStorage {
                 try (BoundedInputStream bis = new BoundedInputStream(data, data.available() % splitSize)) {
                     parts.add(multipartManager.uploadPart(upload, partNumber, bis));
                     partNumber++;
-                    logger.info("grabbed the last {} bytes", data.available() % splitSize);
                 } catch (Exception e) {
-                    logger.error("Error in putting together the MPU {}", e.getMessage());
+                    if (logging) {
+                        logger.error("Error in putting together the MPU {}", e.getMessage());
+                    }
                     throw new StorageException(e);
                 }
             }
             multipartManager.complete(upload, parts);
         } catch (IOException e) {
-            logger.error("Exception when uploading file {}", e);
+            if (logging) {
+                logger.error("Exception when uploading file {}", e);
+            }
             throw new StorageException(e);
         }
-        logger.debug(path + " is now assembled and sent as a multipart stream!");
     }
 
     @Override
