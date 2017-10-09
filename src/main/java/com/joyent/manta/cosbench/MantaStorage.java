@@ -223,7 +223,10 @@ public class MantaStorage extends NoneStorage {
     }
 
     @Override
-    public void createObject(final String container, final String object, final InputStream data, final long length,
+    public void createObject(final String container,
+            final String object,
+            final InputStream data,
+            final long length,
             final Config config) {
         if (logging) {
             logger.info("Performing PUT at /{}/{}", container, object);
@@ -283,7 +286,8 @@ public class MantaStorage extends NoneStorage {
      * @param multipartManager - This will be EncryptedServerSideMultipartManager or ServerSideMultipartManager.
      */
     @SuppressWarnings("unchecked")
-    private void multipartUpload(final InputStream data, final String path,
+    private void multipartUpload(final InputStream data,
+            final String path,
             @SuppressWarnings("rawtypes") final MantaMultipartManager multipartManager) {
         MantaMultipartUpload upload = null;
         try {
@@ -384,7 +388,9 @@ public class MantaStorage extends NoneStorage {
     }
 
     @Override
-    protected void createMetadata(final String container, final String object, final Map<String, String> map,
+    protected void createMetadata(final String container,
+            final String object,
+            final Map<String, String> map,
             final Config config) {
         if (logging) {
             logger.info("Performing POST at /{}/{}", container, object);
