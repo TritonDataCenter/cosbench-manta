@@ -2,7 +2,7 @@ package com.joyent.manta.cosbench;
 
 import com.joyent.manta.client.MantaClient;
 import com.joyent.manta.http.MantaHttpHeaders;
-import com.joyent.manta.org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.io.input.BoundedInputStream;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -105,7 +105,6 @@ Manta by doing:
 ```
 # Adjust the key paths if needed and be sure to specify your own MANTA_USER
 docker run --name=cosbench \
-           -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
            -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa | base64 -w0)" \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
@@ -121,7 +120,6 @@ Manta by doing:
 # JVM to fit within that range
 docker run --name=cosbench \
            -d \
-           -e "MANTA_PUBLIC_KEY=$(cat $HOME/.ssh/id_rsa.pub)" \
            -e "MANTA_PRIVATE_KEY=$(cat $HOME/.ssh/id_rsa | base64 -w0)" \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
@@ -167,7 +165,6 @@ This file should look like:
 ```
 MANTA_USER=username
 MANTA_URL=https://us-east.manta.joyent.com:443 (or private manta URL)
-MANTA_PUBLIC_KEY=public ssh key for accessing Manta
 MANTA_PRIVATE_KEY=private ssh key for accessing manta in base64 -w0 format
 ```
 

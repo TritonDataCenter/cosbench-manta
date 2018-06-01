@@ -1,14 +1,5 @@
 package com.joyent.manta.cosbench;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Objects;
-
-import org.apache.commons.io.input.BoundedInputStream;
-
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
@@ -29,6 +20,14 @@ import com.joyent.manta.cosbench.config.CosbenchMantaConfigContext;
 import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 import com.joyent.manta.http.MantaHttpHeaders;
+import org.apache.commons.io.input.BoundedInputStream;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Manta implementation of the COSBench {@link com.intel.cosbench.api.storage.StorageAPI}.
@@ -119,8 +118,11 @@ public class MantaStorage extends NoneStorage {
         defaults.setMaximumConnections(MAX_CONNECTIONS);
 
         final CosbenchMantaConfigContext cosbenchConfig = new CosbenchMantaConfigContext(config);
-        final ChainedConfigContext context = new ChainedConfigContext(defaults, new EnvVarConfigContext(),
-                new SystemSettingsConfigContext(), cosbenchConfig);
+        final ChainedConfigContext context = new ChainedConfigContext(
+                defaults,
+                new EnvVarConfigContext(),
+                new SystemSettingsConfigContext(),
+                cosbenchConfig);
 
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
         this.logging = cosbenchConfig.logging();
@@ -178,10 +180,15 @@ public class MantaStorage extends NoneStorage {
         if (logging) {
             logger.debug("Manta client has been initialized");
         }
-        if (cosbenchConfig.isClientEncryptionEnabled()) {
+
+        if (context.isClientEncryptionEnabled()) {
             encryptedMultipartManager = new EncryptedServerSideMultipartManager(client);
+            serverMultipartManager = null;
+        } else {
+            encryptedMultipartManager = null;
+            serverMultipartManager = new ServerSideMultipartManager(client);
         }
-        serverMultipartManager = new ServerSideMultipartManager(client);
+
     }
 
     @Override
