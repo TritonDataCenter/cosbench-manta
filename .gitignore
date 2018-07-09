@@ -128,4 +128,6 @@ buildNumber.properties
 !build-dependencies/**
 
 _env
-_env
+
+# macOS
+.DS_Store

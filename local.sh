@@ -1,4 +1,5 @@
 #!/bin/sh
+set -ex
 
 if [ -z "$MANTA_URL" ]; then
     echo invalid MANTA_URL
@@ -23,6 +24,8 @@ else
   # Openssl base64, no wrapping by default
   CMD_BASE64="base64"
 fi
+
+sh build.sh
 
 docker run --name=cosbench \
     -e "MANTA_PRIVATE_KEY=$(cat $MANTA_KEY_PATH | $CMD_BASE64)" \

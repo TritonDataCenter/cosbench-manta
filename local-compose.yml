@@ -1,5 +1,5 @@
 cosbench-driver:
-    image: joyent/cosbench-manta
+    image: joyent/cosbench-manta:latest
     restart: always
     mem_limit: 2g
     environment:
@@ -11,7 +11,7 @@ cosbench-driver:
         - 18088
 
 cosbench-controller:
-    image: joyent/cosbench-manta
+    image: joyent/cosbench-manta:latest
     restart: always
     mem_limit: 1g
     environment:

@@ -12,6 +12,9 @@ using [COSBench](https://github.com/intel-cloud/cosbench/).
 * [Maven 3.3.x](https://maven.apache.org/)
 
 ## Building from Source
+
+### Building the adapter
+
 If you prefer to build from source, you'll also need
 [Maven](https://maven.apache.org/), and then invoke:
 
@@ -21,6 +24,10 @@ If you prefer to build from source, you'll also need
 
 This should generate an OSGI bundle inside the `./target` directory that you
 can drop into the COSBench `osgi/plugins`` directory.
+
+### Building the cosbench-manta docker container
+
+Run `./build.sh` which looks for a jar produced by `mvn package` and uses it to build a container. The resulting container is used by both controller and driver nodes. If you plan to run on Triton, make sure to set your docker environment before running `./build.sh`.
 
 ## Configuration
 
