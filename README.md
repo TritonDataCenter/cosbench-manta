@@ -119,6 +119,9 @@ docker run --name=cosbench \
            -it dekobon/cosbench-manta:latest bash
 ```
 
+Alternatively, configure your environment with `MANTA_URL`, `MANTA_USER`, and `MANTA_KEY_PATH`
+and run `./local.sh`.
+
 Using Triton on the Joyent public cloud you can log into a COSBench system setup for
 Manta by doing:
 ```
