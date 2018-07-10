@@ -1,4 +1,4 @@
-#!bin/sh
+#!/bin/sh
 
 COSBENCH_MANTA_PATH=$(find target -name 'cosbench-manta-*.jar' -print -quit)
 COSBENCH_MANTA_CHECKSUM=$(shasum -a256 $COSBENCH_MANTA_PATH | cut -d' ' -f1)

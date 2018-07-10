@@ -1,5 +1,5 @@
 cosbench-driver:
-    image: dekobon/cosbench-manta
+    image: joyent/cosbench-manta:latest
     restart: always
     mem_limit: 8g
     environment:
@@ -14,7 +14,7 @@ cosbench-driver:
         - triton.cns.services=cosbench-driver
 
 cosbench-controller:
-    image: dekobon/cosbench-manta
+    image: joyent/cosbench-manta:latest
     restart: always
     mem_limit: 4g
     environment:
