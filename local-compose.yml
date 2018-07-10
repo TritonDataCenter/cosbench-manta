@@ -3,24 +3,31 @@ cosbench-driver:
     restart: always
     mem_limit: 2g
     environment:
+        - CONSUL=consul
         - MODE=driver
         - CONSUL_AGENT=1
         - JAVA_OPTS=-Xmx1500m
         - LISTENING_PORT=18088
     expose:
         - 18088
+    links:
+        - consul:consul
 
 cosbench-controller:
     image: joyent/cosbench-manta:latest
     restart: always
     mem_limit: 1g
     environment:
+        - CONSUL=consul
         - MODE=controller
         - CONSUL_AGENT=1
         - JAVA_OPTS=-Xmx800m
         - LISTENING_PORT=19088
     ports:
         - 19088:19088
+    links:
+        - consul:consul
+        - cosbench-driver
 
 # Start with a single host which will bootstrap the cluster.
 # In production we'll want to use an HA cluster.
