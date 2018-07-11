@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/joyent/cosbench-manta.svg?branch=master)](https://travis-ci.org/joyent/cosbench-manta) [![](https://images.microbadger.com/badges/image/dekobon/cosbench-manta.svg)](https://microbadger.com/images/dekobon/cosbench-manta "Get your own image badge on microbadger.com")
+[![Build Status](https://travis-ci.org/joyent/cosbench-manta.svg?branch=master)](https://travis-ci.org/joyent/cosbench-manta) [![](https://images.microbadger.com/badges/image/joyent/cosbench-manta.svg)](https://microbadger.com/images/joyent/cosbench-manta "Get your own image badge on microbadger.com")
 
 # COSBench Manta Adaptor
 
@@ -104,7 +104,7 @@ to make in order to download a single file.
 ## Docker Stand Alone
 You can use a preconfigured host with COSBench and the Manta adaptor preinstalled
 when you run the project's [Docker](https://www.docker.com/) image:
-[`dekobon/cosbench-manta`](https://hub.docker.com/r/dekobon/cosbench-manta/).
+[`joyent/cosbench-manta`](https://hub.docker.com/r/joyent/cosbench-manta/).
 
 Using Docker on your local machine you can log into a COSBench system setup for
 Manta by doing:
@@ -116,7 +116,7 @@ docker run --name=cosbench \
            -e "MANTA_URL=https://us-east.manta.joyent.com:443" \
            -e MANTA_USER=username \
            -p 18088:18088 -p 19088:19088 \
-           -it dekobon/cosbench-manta:latest bash
+           -it joyent/cosbench-manta:latest bash
 ```
 
 Alternatively, configure your environment with `MANTA_URL`, `MANTA_USER`, and `MANTA_KEY_PATH`
@@ -137,7 +137,7 @@ docker run --name=cosbench \
            -m 8g \
            -p 18088:18088 -p 19088:19088 \
            --restart=always \
-           -it dekobon/cosbench-manta:latest sleep infinity          
+           -it joyent/cosbench-manta:latest sleep infinity
 ```
 
 Note: you will **need** to specify the Manta environment variables in order for
