@@ -25,7 +25,7 @@ else
   CMD_BASE64="base64"
 fi
 
-sh build.sh
+sh build-docker-image.sh
 
 docker run --name=cosbench \
     -e "MANTA_PRIVATE_KEY=$(cat $MANTA_KEY_PATH | $CMD_BASE64)" \

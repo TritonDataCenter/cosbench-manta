@@ -27,7 +27,7 @@ can drop into the COSBench `osgi/plugins`` directory.
 
 ### Building the cosbench-manta docker container
 
-Run `./build.sh` which looks for a jar produced by `mvn package` and uses it to build a container. The resulting container is used by both controller and driver nodes. If you plan to run on Triton, make sure to set your docker environment before running `./build.sh`.
+Run `./build-docker-image.sh` which looks for a jar produced by `mvn package` and uses it to build a container. The resulting container is used by both controller and driver nodes. If you plan to run on Triton, make sure to set your docker environment before running `./build-docker-image.sh`.
 
 ## Configuration
 
