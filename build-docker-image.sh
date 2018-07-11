@@ -9,11 +9,12 @@ if [ ! -f $COSBENCH_MANTA_PATH ]; then
 	exit 1
 fi
 
-COSBENCH_DOCKERFILE
+COSBENCH_IMAGE_TAG=${COSBENCH_IMAGE_TAG:-latest}
+COSBENCH_DOCKERFILE=${COSBENCH_DOCKERFILE:-Dockerfile}
 
 docker build \
     --build-arg COSBENCH_MANTA_PATH=$COSBENCH_MANTA_PATH \
     --build-arg COSBENCH_MANTA_CHECKSUM=$COSBENCH_MANTA_CHECKSUM \
-    --tag joyent/cosbench-manta:latest \
+    --tag joyent/cosbench-manta:$COSBENCH_IMAGE_TAG \
     --file $COSBENCH_DOCKERFILE \
     .
