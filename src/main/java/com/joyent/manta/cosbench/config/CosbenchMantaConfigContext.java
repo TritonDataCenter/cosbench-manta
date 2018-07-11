@@ -117,6 +117,18 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
+    public Integer getConnectionRequestTimeout() {
+        return safeGetInteger(MapConfigContext.MANTA_CONNECTION_REQUEST_TIMEOUT_KEY,
+                "Couldn't get connection request timeout from COSBench config");
+    }
+
+    @Override
+    public Integer getExpectContinueTimeout() {
+        return safeGetInteger(MapConfigContext.MANTA_CONNECTION_REQUEST_TIMEOUT_KEY,
+                "Couldn't get expect continue timeout from COSBench config");
+    }
+
+    @Override
     public Boolean verifyUploads() {
         return safeGetBoolean(MapConfigContext.MANTA_VERIFY_UPLOADS_KEY,
                 "Couldn't get verify uploads flag from COSBench config");
@@ -126,6 +138,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public Integer getUploadBufferSize() {
         return safeGetInteger(MapConfigContext.MANTA_UPLOAD_BUFFER_SIZE_KEY,
                 "Couldn't get upload buffer size from COSBench config");
+    }
+
+    @Override
+    public Integer getSkipDirectoryDepth() {
+        return safeGetInteger(MapConfigContext.MANTA_SKIP_DIRECTORY_DEPTH_KEY,
+                "Couldn't get skip directory depth from COSBench config");
     }
 
     @Override
@@ -358,6 +376,31 @@ public class CosbenchMantaConfigContext implements ConfigContext {
 
     @Override
     public String toString() {
-        return ConfigContext.toString(this);
+        final StringBuilder sb = new StringBuilder("CosbenchMantaConfigContext{");
+
+        // generic java-manta configuration
+        sb.append(ConfigContext.toString(this));
+
+        // configs provided by workload xml at xpath: /workload/storage[@config]
+        sb.append("Config{");
+        sb.append("logging='");
+        sb.append(this.logging());
+        sb.append("durabilityLevel='");
+        sb.append(this.getDurabilityLevel());
+        sb.append("chunked='");
+        sb.append(this.chunked());
+        sb.append("baseDirectory='");
+        sb.append(this.getBaseDirectory());
+        sb.append("isMultipart='");
+        sb.append(this.isMultipart());
+        sb.append("getSplitSize='");
+        sb.append(this.getSplitSize());
+        sb.append("getNumberOfSections='");
+        sb.append(this.getNumberOfSections());
+        sb.append("getObjectSize='");
+        sb.append(this.getObjectSize());
+        sb.append("}");
+
+        return sb.toString();
     }
 }

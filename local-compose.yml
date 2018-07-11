@@ -1,25 +1,49 @@
 cosbench-driver:
-    extends:
-        file: docker-compose.yml
-        service: cosbench-driver
+    image: joyent/cosbench-manta:latest
+    restart: always
+    mem_limit: 2g
     environment:
         - CONSUL=consul
+        - MODE=driver
         - CONSUL_AGENT=1
+        - JAVA_OPTS=-Xmx1500m
+        - LISTENING_PORT=18088
+    expose:
+        - 18088
     links:
         - consul:consul
+
 cosbench-controller:
-    extends:
-        file: docker-compose.yml
-        service: cosbench-controller
+    image: joyent/cosbench-manta:latest
+    restart: always
+    mem_limit: 1g
     environment:
         - CONSUL=consul
+        - MODE=controller
         - CONSUL_AGENT=1
+        - JAVA_OPTS=-Xmx800m
+        - LISTENING_PORT=19088
+    ports:
+        - 19088:19088
     links:
         - consul:consul
         - cosbench-driver
+
+# Start with a single host which will bootstrap the cluster.
+# In production we'll want to use an HA cluster.
 consul:
-    extends:
-        file: docker-compose.yml
-        service: consul
+    image: consul:v0.7.0
+    restart: always
+    mem_limit: 128m
+    expose:
+      - 53
+      - 8300
+      - 8301
+      - 8302
+      - 8400
+      - 8500
     ports:
-        - 8500:8500
+      - 8500
+    dns:
+       - 127.0.0.1
+    command: agent -server -client=0.0.0.0 -bootstrap -ui

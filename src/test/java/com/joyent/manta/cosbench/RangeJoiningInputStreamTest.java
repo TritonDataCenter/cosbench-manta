@@ -1,6 +1,6 @@
 package com.joyent.manta.cosbench;
 
-import com.joyent.manta.org.apache.commons.io.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.testng.Assert;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;

@@ -4,7 +4,7 @@
 
     <groupId>com.joyent.manta</groupId>
     <artifactId>cosbench-manta</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>cosbench-manta</name>
@@ -85,12 +85,12 @@
         <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
         <!-- Dependency versions -->
         <dependency.checkstyle.version>7.5.1</dependency.checkstyle.version>
-        <dependency.java-manta.version>3.1.6</dependency.java-manta.version>
-        <dependency.slf4j-log4j12.version>1.7.21</dependency.slf4j-log4j12.version>
+        <dependency.java-manta.version>3.2.2</dependency.java-manta.version>
+        <dependency.slf4j-log4j12.version>1.7.25</dependency.slf4j-log4j12.version>
         <dependency.osgi4.version>1.0</dependency.osgi4.version>
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
         <dependency.testng.version>6.10</dependency.testng.version>
-        <dependency.commons-lang.version>3.5</dependency.commons-lang.version>
+        <dependency.commons-lang.version>3.6</dependency.commons-lang.version>
         <dependency.commons-io.version>2.5</dependency.commons-io.version>
     </properties>
 
@@ -128,22 +128,11 @@
             <artifactId>java-manta-client</artifactId>
             <version>${dependency.java-manta.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${dependency.slf4j-log4j12.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>[1.0.0,2.0.0)</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -193,8 +182,10 @@
                         <Bundle-Activator>com.joyent.manta.cosbench.Activator</Bundle-Activator>
                         <Private-Package>com.joyent.manta.cosbench.*</Private-Package>
                         <!-- We exclude log4j because it should be imported for us. -->
-                        <Embed-Dependency>*;scope=compile|runtime;artifactId=!log4j</Embed-Dependency>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
+                        <Import-Package>
+                            !com.joyent.manta.org.apache.log4j,!com.ibm.uvm.tools,*;resolution:=optional</Import-Package>
                         <Include-Resource>{maven-resources}</Include-Resource>
                         <_exportcontents>com.joyent.manta.config</_exportcontents>
                         <!--<Include-Resource>src/main/resources</Include-Resource>-->

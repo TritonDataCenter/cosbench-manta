@@ -1,4 +1,4 @@
-# dekobon/cosbench-manta
+# joyent/cosbench-manta
 
 # We use the Azul OpenJDK because it is a well tested and supported build.
 FROM azul/zulu-openjdk-debian:8
@@ -7,12 +7,13 @@ MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
 ENV _JAVA_OPTIONS=-Dcom.twmacinta.util.MD5.NATIVE_LIB_FILE=/opt/cosbench/lib/arch/linux_amd64/MD5.so
+
 ENV COSBENCH_VERSION 0.4.2.c4
 ENV COSBENCH_CHECKSUM abe837ffce3d6f094816103573433f5358c0b27ce56f414a60dceef985750397
-ENV COSBENCH_MANTA_VERSION 1.1.1
-ENV COSBENCH_MANTA_CHECKSUM e40354da3d156fdc5792c3cbde84dcc9c48edb40b05e78a98d958926c1b0120f
+
 ENV CONTAINERPILOT_VER 2.7.8
 ENV CONTAINERPILOT file:///etc/containerpilot.json
+
 ENV OSGI_CONSOLE_PORT_DRIVER 18089
 ENV OSGI_CONSOLE_PORT_CONTROLLER 19089
 ENV MODE unknown
@@ -29,7 +30,7 @@ LABEL org.label-schema.name="COSBench $COSBENCH_VERSION with Manta SDK Support" 
 # ==============================================================================
 # openssh-client:     for ssh-keygen to generate key fingerprints
 # curl:               for downloading binaries
-# ca-certifiactes:    for downloading via https
+# ca-certificates:    for downloading via https
 # vim:                for debugging cosbench (could be removed)
 # unzip:              for installing binaries
 # htop:               for analyzing cosbench performance (could be removed)
@@ -64,10 +65,6 @@ RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/downloa
     mv "/opt/${COSBENCH_VERSION}" /opt/cosbench && \
     rm /tmp/cosbench.zip
 
-# Download and install the Manta adaptor
-RUN curl --retry 6 -Ls "https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar" > /opt/cosbench/osgi/plugins/cosbench-manta.jar && \
-    echo "${COSBENCH_MANTA_CHECKSUM}  /opt/cosbench/osgi/plugins/cosbench-manta.jar" | sha256sum -c
-
 # Install Consul
 # Releases at https://releases.hashicorp.com/consul
 RUN export CONSUL_VERSION=0.9.2 \
@@ -97,6 +94,18 @@ RUN export CONTAINERPILOT_CHECKSUM=09158be44c3e887244581d4d019748df9fcfa93c \
     && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
     && rm /tmp/containerpilot.tar.gz
 
+ENV COSBENCH_MANTA_VERSION 1.1.1
+
+ARG COSBENCH_MANTA_PATH=https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar
+ARG COSBENCH_MANTA_CHECKSUM=e40354da3d156fdc5792c3cbde84dcc9c48edb40b05e78a98d958926c1b0120f
+
+# Download and install the Manta adaptor, allowing users to supply a path to the JAR and checksum through build args
+ADD $COSBENCH_MANTA_PATH  /tmp/
+RUN mkdir -p /opt/cosbench-manta && \
+    echo "${COSBENCH_MANTA_CHECKSUM}  /tmp/$(basename $COSBENCH_MANTA_PATH)" | sha256sum -c && \
+    mv "/tmp/$(basename $COSBENCH_MANTA_PATH)" /opt/cosbench/osgi/plugins/cosbench-manta.jar
+
+
 COPY docker_build/usr /usr
 RUN chmod +x /usr/local/bin/proclimit
 
@@ -110,7 +119,7 @@ COPY docker_build/etc /etc
 
 # Setup Tomcat user to run COSBench process
 RUN groupadd -g 120 tomcat && \
-    useradd -g 120 -G sudo -u 120 -c 'Tomcat User' -d /opt/cosbench -r -s /bin/false tomcat && \
+    useradd -g 120 -G sudo -u 120 -c 'Tomcat User' -d /opt/cosbench -r tomcat && \
     mkdir /opt/cosbench/.ssh && \
     chown -R tomcat:tomcat /opt/cosbench && \
     chown -R tomcat:tomcat /var/lib/consul
