@@ -4,13 +4,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.1.2] - 2018-08-08
 ### Added
-- Introduce a build-docker-image.sh to simplify creation of the docker container.
-- Introduce Dockerfile.alpine for a fewest-possible-layers alternative that's 40% smaller.
+ - Introduce a build-docker-image.sh to simplify creation of the docker container.
+ - Introduce Dockerfile.alpine for a fewest-possible-layers alternative that's 40% smaller.
 ### Fixed
-- Resolved the OSGi bundling conflict with log4j.
-- Stop asking users to pass in `MANTA_PUBLIC_KEY`
+ - Resolved the OSGi bundling conflict with log4j.
+ - Stop asking users to pass in `MANTA_PUBLIC_KEY`
 ### Changed
-- Dockerfile to accept a path to a cosbench-manta jar and leverage that in a local.sh script which can be used to iterate more quickly
+ - Dockerfile to accept a path to a cosbench-manta jar and leverage that in a local.sh script which can be used to iterate more quickly
+ - Updated Java Manta driver library to 3.2.3.
 
 ## [1.1.1] - 2017-09-05
 ### Changed
