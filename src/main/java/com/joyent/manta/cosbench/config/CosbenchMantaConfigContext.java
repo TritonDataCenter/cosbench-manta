@@ -6,6 +6,7 @@ import com.intel.cosbench.log.Logger;
 import com.joyent.manta.config.ConfigContext;
 import com.joyent.manta.config.EncryptionAuthenticationMode;
 import com.joyent.manta.config.MapConfigContext;
+import com.joyent.manta.config.MetricReporterMode;
 import org.bouncycastle.util.encoders.Base64;
 
 /**
@@ -144,6 +145,25 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     public Integer getSkipDirectoryDepth() {
         return safeGetInteger(MapConfigContext.MANTA_SKIP_DIRECTORY_DEPTH_KEY,
                 "Couldn't get skip directory depth from COSBench config");
+    }
+
+    @Override
+    public Integer downloadContinuations() {
+        return safeGetInteger(MapConfigContext.MANTA_DOWNLOAD_CONTINUATIONS_KEY,
+                              "Couldn't get download continuation count");
+    }
+
+    @Override
+    public MetricReporterMode getMetricReporterMode() {
+        return safeGetEnum(MapConfigContext.MANTA_METRIC_REPORTER_MODE_KEY,
+                           "Couldn't get metric reporter mode",
+                           MetricReporterMode.class);
+    }
+
+    @Override
+    public Integer getMetricReporterOutputInterval() {
+        return safeGetInteger(MapConfigContext.MANTA_METRIC_REPORTER_OUTPUT_INTERVAL_KEY,
+                              "Couldn't get metric reporter output interval");
     }
 
     @Override
