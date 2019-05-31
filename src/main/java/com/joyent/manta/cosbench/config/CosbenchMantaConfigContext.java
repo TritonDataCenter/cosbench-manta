@@ -395,6 +395,18 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
+    public Boolean isContentTypeDetectionEnabled() {
+        return safeGetBoolean(MapConfigContext.MANTA_CONTENT_TYPE_DETECTION_ENABLED_KEY,
+                "Couldn't get content type detection boolean flag");
+    }
+
+    @Override
+    public Integer getPruneEmptyParentDepth() {
+        return safeGetInteger(MapConfigContext.MANTA_PRUNE_EMPTY_PARENT_DEPTH_KEY,
+                "Couldn't get prune empty parent depth value from config");
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("CosbenchMantaConfigContext{");
 

@@ -65,9 +65,9 @@
         <surefire.forkCount>1</surefire.forkCount>
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
-        <maven-bundle-plugin.version>3.3.0</maven-bundle-plugin.version>
+        <maven-bundle-plugin.version>4.2.0</maven-bundle-plugin.version>
         <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
-        <maven-extra-enforcer-rules.version>1.0-beta-6</maven-extra-enforcer-rules.version>
+        <maven-extra-enforcer-rules.version>1.2</maven-extra-enforcer-rules.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
         <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
         <maven-clean-plugin.version>3.0.0</maven-clean-plugin.version>
@@ -84,14 +84,14 @@
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
         <!-- Dependency versions -->
-        <dependency.checkstyle.version>7.5.1</dependency.checkstyle.version>
-        <dependency.java-manta.version>3.2.3</dependency.java-manta.version>
+        <dependency.checkstyle.version>8.18</dependency.checkstyle.version>
+        <dependency.java-manta.version>3.4.0</dependency.java-manta.version>
         <dependency.slf4j-log4j12.version>1.7.25</dependency.slf4j-log4j12.version>
         <dependency.osgi4.version>1.0</dependency.osgi4.version>
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
         <dependency.testng.version>6.10</dependency.testng.version>
-        <dependency.commons-lang.version>3.6</dependency.commons-lang.version>
-        <dependency.commons-io.version>2.5</dependency.commons-io.version>
+        <dependency.commons-lang.version>3.9</dependency.commons-lang.version>
+        <dependency.commons-io.version>2.6</dependency.commons-io.version>
     </properties>
 
     <repositories>
