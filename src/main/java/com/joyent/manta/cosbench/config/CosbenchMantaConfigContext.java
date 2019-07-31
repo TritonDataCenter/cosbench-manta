@@ -3,6 +3,7 @@ package com.joyent.manta.cosbench.config;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
+import com.joyent.manta.client.MantaClient;
 import com.joyent.manta.config.ConfigContext;
 import com.joyent.manta.config.EncryptionAuthenticationMode;
 import com.joyent.manta.config.MapConfigContext;
@@ -214,6 +215,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
         }
     }
 
+    @Override
+    public Boolean tlsInsecure() {
+        return safeGetBoolean(MapConfigContext.MANTA_TLS_INSECURE_KEY,
+                "Couldn't get tlsInsecure boolean flag");
+    }
+
     // ========================================================================
     // COSBench Parameters
     // ========================================================================
@@ -307,6 +314,15 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
+     * Reads the configuration and finds the test strategy being benchmarked.
+     *
+     * @return the flag indicating buckets
+     */
+    public String testType() {
+        return safeGetString("test_type", "Couldn't get test_type setting from COSBench config");
+    }
+
+    /**
      * Utility method that checks for the presence of Integer values in the
      * COSBench configuration and then returns the value if found.
      *
@@ -395,6 +411,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
+    public String getMantaBucketsDirectory() {
+        return ConfigContext.deriveHomeDirectoryFromUser(getMantaUser())
+                + MantaClient.SEPARATOR + "buckets";
+    }
+
+    @Override
     public Boolean isContentTypeDetectionEnabled() {
         return safeGetBoolean(MapConfigContext.MANTA_CONTENT_TYPE_DETECTION_ENABLED_KEY,
                 "Couldn't get content type detection boolean flag");
@@ -431,6 +453,8 @@ public class CosbenchMantaConfigContext implements ConfigContext {
         sb.append(this.getNumberOfSections());
         sb.append("getObjectSize='");
         sb.append(this.getObjectSize());
+        sb.append("testType='");
+        sb.append(this.testType());
         sb.append("}");
 
         return sb.toString();
