@@ -28,6 +28,11 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     private final Config config;
 
     /**
+     * Default test_type.
+     */
+    private static final String DEFAULT_TEST_TYPE = "dir";
+
+    /**
      * Default constructor that wraps a Cosbench config instance.
      *
      * @param config cosbench config instance
@@ -319,7 +324,14 @@ public class CosbenchMantaConfigContext implements ConfigContext {
      * @return the flag indicating buckets
      */
     public String testType() {
-        return safeGetString("test_type", "Couldn't get test_type setting from COSBench config");
+        String testType = safeGetString("test_type",
+                "Couldn't get test_type setting from COSBench config");
+
+        if (testType == null) {
+            return DEFAULT_TEST_TYPE;
+        }
+
+        return testType;
     }
 
     /**

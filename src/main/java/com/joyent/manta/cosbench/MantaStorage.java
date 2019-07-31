@@ -4,6 +4,7 @@ import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
+import com.joyent.manta.client.MantaBucketListingIterator;
 import com.joyent.manta.client.MantaClient;
 import com.joyent.manta.client.MantaMetadata;
 import com.joyent.manta.client.multipart.EncryptedServerSideMultipartManager;
@@ -21,7 +22,6 @@ import com.joyent.manta.exception.MantaClientHttpResponseException;
 import com.joyent.manta.exception.MantaErrorCode;
 import com.joyent.manta.http.MantaHttpHeaders;
 import org.apache.commons.io.input.BoundedInputStream;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -282,8 +282,25 @@ public class MantaStorage extends NoneStorage {
         } catch (MantaClientHttpResponseException e) {
             if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)
                     || !e.getServerCode().equals(MantaErrorCode.BUCKET_NOT_FOUND_ERROR)) {
-                if (logging) {
-                    logger.error("Error deleting container", e);
+
+                if (e.getServerCode().equals(MantaErrorCode.BUCKET_NOT_EMPTY_ERROR)) {
+                    try {
+                        deleteObjectsInBucket(container);
+                        client.deleteBucket(pathOfBaseContainer(container));
+                    } catch (MantaClientHttpResponseException me) {
+                        if (!me.getServerCode().equals(MantaErrorCode.BUCKET_NOT_FOUND_ERROR)) {
+                            if (logging) {
+                                logger.error("Error in deleting container", me);
+                            }
+                            throw new StorageException(me);
+                        }
+                    } catch (IOException ie) {
+                        throw new StorageException(ie);
+                    }
+                } else {
+                    if (logging) {
+                        logger.error("Error deleting container", e);
+                    }
                 }
                 throw new StorageException(e);
             }
@@ -570,7 +587,7 @@ public class MantaStorage extends NoneStorage {
     private String pathOfBaseContainer(final String container) {
         if ("buckets".equals(testType)) {
             return String.format("%s%s", currentTestDirOrBucket,
-                    container.toLowerCase().replaceAll("[^a-zA-Z0-9]", StringUtils.EMPTY));
+                    container.toLowerCase().replaceAll("[^a-zA-Z0-9]", ""));
         } else {
             return String.format("%s%s%s", currentTestDirOrBucket,
                     MantaClient.SEPARATOR, container);
@@ -590,10 +607,45 @@ public class MantaStorage extends NoneStorage {
             return String.format("%s%s%s%s", bucketPath,
                     MantaClient.SEPARATOR,
                     DEFAULT_BUCKETS_OBJECT,
-                    object.toLowerCase().replaceAll("[^a-zA-Z0-9]", StringUtils.EMPTY));
+                    object.toLowerCase().replaceAll("[^a-zA-Z0-9]", ""));
         } else {
             String dir = pathOfBaseContainer(container);
             return String.format("%s%s%s", dir, MantaClient.SEPARATOR, object);
+        }
+    }
+
+    /**
+     * Utility method that iterates through the contents of the bucket and deletes
+     * the objects in order to empty the bucket.
+     *
+     * @param container container name
+     * @throws IOException when object cannot be deleted
+     */
+    private void deleteObjectsInBucket(final String container) throws IOException {
+        String bucketIteratorPath = String.format("%s%s%s", pathOfBaseContainer(container),
+                MantaClient.SEPARATOR, DEFAULT_BUCKETS_OBJECT);
+        MantaBucketListingIterator itr =
+                client.streamingBucketIterator(bucketIteratorPath);
+        while (itr.hasNext()) {
+            Map<String, Object> next = itr.next();
+            if ("bucketobject".equals(Objects.toString(next.get("type")))) {
+                String objectPath = pathOfObject(container,
+                        Objects.toString(next.get("name")));
+                try {
+                    client.delete(objectPath);
+                } catch (MantaClientHttpResponseException e) {
+                    if (!e.getServerCode().equals(MantaErrorCode.OBJECT_NOT_FOUND_ERROR)
+                    || !e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
+                        if (logging) {
+                            String msg = String.format("Bucket /%s is not empty. "
+                                            + "Error in attempting to delete object at %s",
+                                    container, objectPath);
+                            logger.error(msg, e);
+                        }
+                        throw new StorageException(e);
+                    }
+                }
+            }
         }
     }
 }
