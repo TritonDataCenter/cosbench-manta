@@ -24,9 +24,9 @@ if [ -d /native ]; then
         GC_THREADS=$(echo "8k $DIVIDED 3 + pq" | dc | awk 'function ceil(valor) { return (valor == int(valor) && value != 0) ? valor : int(valor)+1 } { printf "%d", ceil($1) }')
     fi
 
-    TOMCAT_OPTS="-XX:-UseGCTaskAffinity -XX:-BindGCTaskThreadsToCPUs -XX:ParallelGCThreads=${GC_THREADS}"
+    TOMCAT_OPTS="-XX:-UseGCTaskAffinity -XX:-BindGCTaskThreadsToCPUs -XX:ParallelGCThreads=${GC_THREADS} ${JAVA_OPTS}"
 else
-    TOMCAT_OPTS=""
+    TOMCAT_OPTS="${JAVA_OPTS}"
 fi
 
 if [ "$MODE" == "driver" ]; then

@@ -1,8 +1,16 @@
+/*
+ * Copyright (c) 2016, Joyent, Inc. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package com.joyent.manta.cosbench.config;
 
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
+import com.joyent.manta.client.MantaClient;
 import com.joyent.manta.config.ConfigContext;
 import com.joyent.manta.config.EncryptionAuthenticationMode;
 import com.joyent.manta.config.MapConfigContext;
@@ -14,6 +22,8 @@ import org.bouncycastle.util.encoders.Base64;
  * connect Cosbench config seamlessly.
  *
  * @author <a href="https://github.com/dekobon">Elijah Zupancic</a>
+ *
+ * @author <a href="https://github.com/1010sachin">Sachin Gupta</a>
  */
 public class CosbenchMantaConfigContext implements ConfigContext {
     /**
@@ -25,6 +35,11 @@ public class CosbenchMantaConfigContext implements ConfigContext {
      * Embedded Cosbench config reference.
      */
     private final Config config;
+
+    /**
+     * Default test_type.
+     */
+    private static final String DEFAULT_TEST_TYPE = "dir";
 
     /**
      * Default constructor that wraps a Cosbench config instance.
@@ -214,6 +229,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
         }
     }
 
+    @Override
+    public Boolean tlsInsecure() {
+        return safeGetBoolean(MapConfigContext.MANTA_TLS_INSECURE_KEY,
+                "Couldn't get tlsInsecure boolean flag");
+    }
+
     // ========================================================================
     // COSBench Parameters
     // ========================================================================
@@ -307,6 +328,22 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     /**
+     * Reads the configuration and finds the test strategy being benchmarked.
+     *
+     * @return the flag indicating buckets
+     */
+    public String testType() {
+        String testType = safeGetString("test_type",
+                "Couldn't get test_type setting from COSBench config");
+
+        if (testType == null) {
+            return DEFAULT_TEST_TYPE;
+        }
+
+        return testType;
+    }
+
+    /**
      * Utility method that checks for the presence of Integer values in the
      * COSBench configuration and then returns the value if found.
      *
@@ -395,6 +432,12 @@ public class CosbenchMantaConfigContext implements ConfigContext {
     }
 
     @Override
+    public String getMantaBucketsDirectory() {
+        return ConfigContext.deriveHomeDirectoryFromUser(getMantaUser())
+                + MantaClient.SEPARATOR + "buckets";
+    }
+
+    @Override
     public Boolean isContentTypeDetectionEnabled() {
         return safeGetBoolean(MapConfigContext.MANTA_CONTENT_TYPE_DETECTION_ENABLED_KEY,
                 "Couldn't get content type detection boolean flag");
@@ -431,6 +474,8 @@ public class CosbenchMantaConfigContext implements ConfigContext {
         sb.append(this.getNumberOfSections());
         sb.append("getObjectSize='");
         sb.append(this.getObjectSize());
+        sb.append("testType='");
+        sb.append(this.testType());
         sb.append("}");
 
         return sb.toString();
