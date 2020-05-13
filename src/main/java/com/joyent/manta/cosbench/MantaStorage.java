@@ -215,6 +215,8 @@ public class MantaStorage extends NoneStorage {
      * @param cosbenchConfig - The cosbench config.
      * @param context - The manta config context.
      * @throws IOException when there is a problem in initializing the manta client
+     * @throws MantaClientHttpResponseException if buckets unsupported in Manta
+     * @throws StorageException if test path setup fails
      */
     private void initializeClient(final CosbenchMantaConfigContext cosbenchConfig,
                                   final ChainedConfigContext context) throws IOException {
