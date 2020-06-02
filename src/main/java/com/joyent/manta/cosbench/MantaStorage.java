@@ -1,9 +1,17 @@
+/*
+ * Copyright (c) 2016, Joyent, Inc. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package com.joyent.manta.cosbench;
 
 import com.intel.cosbench.api.storage.NoneStorage;
 import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
+import com.joyent.manta.client.MantaBucketListingIterator;
 import com.joyent.manta.client.MantaClient;
 import com.joyent.manta.client.MantaMetadata;
 import com.joyent.manta.client.multipart.EncryptedServerSideMultipartManager;
@@ -33,12 +41,24 @@ import java.util.Objects;
  * Manta implementation of the COSBench {@link com.intel.cosbench.api.storage.StorageAPI}.
  *
  * @author <a href="https://github.com/dekobon">Elijah Zupancic</a>
+ *
+ * @author <a href="https://github.com/1010sachin">Sachin Gupta</a>
  */
 public class MantaStorage extends NoneStorage {
     /**
      * Hardcoded directory in Manta in which all benchmark files are stored.
      */
     private static final String DEFAULT_COSBENCH_BASE_DIR = "stor/cosbench";
+
+    /**
+     * Hardcoded bucket in Manta in which all buckets benchmark files are stored.
+     */
+    private static final String DEFAULT_COSBENCH_BUCKETS_PATH = "buckets/";
+
+    /**
+     * Hardcoded bucket in Manta in which all buckets benchmark files are stored.
+     */
+    private static final String DEFAULT_BUCKETS_OBJECT = "objects/";
 
     /**
      * The default number of maximum HTTP connections at one time to the Manta API.
@@ -51,9 +71,9 @@ public class MantaStorage extends NoneStorage {
     private MantaClient client;
 
     /**
-     * The current test directory name.
+     * The current test directory or bucket name.
      */
-    private String currentTestDirectory;
+    private String currentTestDirOrBucket;
 
     /**
      * Number of copies of object to store.
@@ -106,6 +126,11 @@ public class MantaStorage extends NoneStorage {
      */
     private ServerSideMultipartManager serverMultipartManager;
 
+    /**
+     * String representing the type of test either dir or buckets.
+     */
+    private String testType;
+
     @Override
     public void init(final Config config, final Logger logger) {
         logger.debug("Manta client has started initialization");
@@ -124,6 +149,7 @@ public class MantaStorage extends NoneStorage {
                 new SystemSettingsConfigContext(),
                 cosbenchConfig);
 
+        this.testType = cosbenchConfig.testType();
         this.durabilityLevel = cosbenchConfig.getDurabilityLevel();
         this.logging = cosbenchConfig.logging();
         this.sections = cosbenchConfig.getNumberOfSections();
@@ -161,17 +187,8 @@ public class MantaStorage extends NoneStorage {
         try {
             client = new MantaClient(context);
 
-            final String baseDir = Objects.toString(cosbenchConfig.getBaseDirectory(), DEFAULT_COSBENCH_BASE_DIR);
+            initializeClient(cosbenchConfig, context);
 
-            // We rely on COSBench properly cleaning up after itself.
-            currentTestDirectory = String.format("%s/%s", context.getMantaHomeDirectory(), baseDir);
-
-            client.putDirectory(currentTestDirectory, true);
-
-            if (!client.existsAndIsAccessible(currentTestDirectory)) {
-                String msg = "Unable to create base test directory";
-                throw new StorageException(msg);
-            }
         } catch (IOException e) {
             logger.error("Error in initialization", e);
             throw new StorageException(e);
@@ -191,14 +208,65 @@ public class MantaStorage extends NoneStorage {
 
     }
 
+
+    /**
+     * Helper method for initializing cosbench.
+     *
+     * @param cosbenchConfig - The cosbench config.
+     * @param context - The manta config context.
+     * @throws IOException when there is a problem in initializing the manta client
+     * @throws MantaClientHttpResponseException if buckets unsupported in Manta
+     * @throws StorageException if test path setup fails
+     */
+    private void initializeClient(final CosbenchMantaConfigContext cosbenchConfig,
+                                  final ChainedConfigContext context) throws IOException {
+        if ("buckets".equals(testType)) {
+            final String bucketsPath = context.getMantaBucketsDirectory();
+            try {
+                client.options(bucketsPath);
+            } catch (MantaClientHttpResponseException e) {
+                if (MantaErrorCode.RESOURCE_NOT_FOUND_ERROR.equals(e.getServerCode())) {
+                    logger.error("Buckets not supported in current Manta",
+                            e.getStatusMessage());
+                    throw new StorageException(e);
+                }
+            }
+            currentTestDirOrBucket = String.format("%s%s%s",
+                    context.getMantaHomeDirectory(), MantaClient.SEPARATOR,
+                    DEFAULT_COSBENCH_BUCKETS_PATH);
+        } else {
+            final String baseDir = Objects.toString(cosbenchConfig.getBaseDirectory(),
+                    DEFAULT_COSBENCH_BASE_DIR);
+            currentTestDirOrBucket = String.format("%s%s%s",
+                    context.getMantaHomeDirectory(), MantaClient.SEPARATOR, baseDir);
+            client.putDirectory(currentTestDirOrBucket, true);
+            if (!client.existsAndIsAccessible(currentTestDirOrBucket)) {
+                String msg = "Unable to create base test directory";
+                throw new StorageException(msg);
+            }
+        }
+    }
+
     @Override
     public void createContainer(final String container, final Config config) {
         if (logging) {
-            logger.info("Performing PUT at /{}", container);
+            if ("buckets".equals(testType)) {
+                logger.info("Performing CREATE bucket at /{}", container);
+            } else {
+                logger.info("Performing PUT dir at /{}", container);
+            }
         }
-
         try {
-            client.putDirectory(directoryOfContainer(container));
+            if ("buckets".equals(testType)) {
+                final String bucketPath = pathOfBaseContainer(container);
+                client.createBucket(bucketPath);
+                if (!client.existsAndIsAccessible(bucketPath)) {
+                    String msg = "Unable to create test bucket";
+                    throw new StorageException(msg);
+                }
+            } else {
+                client.putDirectory(pathOfBaseContainer(container));
+            }
         } catch (Exception e) {
             if (logging) {
                 logger.error("Error creating container", e);
@@ -209,15 +277,41 @@ public class MantaStorage extends NoneStorage {
     @Override
     public void deleteContainer(final String container, final Config config) {
         if (logging) {
-            logger.info("Performing DELETE at /{}", container);
+            if ("buckets".equals(testType)) {
+                logger.info("Performing DELETE bucket at /{}", container);
+            } else {
+                logger.info("Performing DELETE dir at /{}", container);
+            }
         }
 
         try {
-            client.deleteRecursive(directoryOfContainer(container));
+            if ("buckets".equals(testType)) {
+                client.deleteBucket(pathOfBaseContainer(container));
+            } else {
+                client.deleteRecursive(pathOfBaseContainer(container));
+            }
         } catch (MantaClientHttpResponseException e) {
-            if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
-                if (logging) {
-                    logger.error("Error error deleting object", e);
+            if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)
+                    || !e.getServerCode().equals(MantaErrorCode.BUCKET_NOT_FOUND_ERROR)) {
+
+                if (e.getServerCode().equals(MantaErrorCode.BUCKET_NOT_EMPTY_ERROR)) {
+                    try {
+                        deleteObjectsInBucket(container);
+                        client.deleteBucket(pathOfBaseContainer(container));
+                    } catch (MantaClientHttpResponseException me) {
+                        if (!me.getServerCode().equals(MantaErrorCode.BUCKET_NOT_FOUND_ERROR)) {
+                            if (logging) {
+                                logger.error("Error in deleting container", me);
+                            }
+                            throw new StorageException(me);
+                        }
+                    } catch (IOException ie) {
+                        throw new StorageException(ie);
+                    }
+                } else {
+                    if (logging) {
+                        logger.error("Error deleting container", e);
+                    }
                 }
                 throw new StorageException(e);
             }
@@ -236,7 +330,12 @@ public class MantaStorage extends NoneStorage {
             final long length,
             final Config config) {
         if (logging) {
-            logger.info("Performing PUT at /{}/{}", container, object);
+            if ("buckets".equals(testType)) {
+                logger.info("Performing PUT bucketobject at /{}/objects/{}",
+                        container, object);
+            } else {
+                logger.info("Performing PUT at /{}/{}", container, object);
+            }
         }
 
         final String path = pathOfObject(container, object);
@@ -267,8 +366,16 @@ public class MantaStorage extends NoneStorage {
             // do things in the right order.
             if (e.getServerCode().equals(MantaErrorCode.DIRECTORY_DOES_NOT_EXIST_ERROR)) {
                 try {
-                    String dir = directoryOfContainer(container);
+                    String dir = pathOfBaseContainer(container);
                     client.putDirectory(dir, true);
+                    client.put(path, data, contentLength, headers, null);
+                } catch (IOException ioe) {
+                    throw new StorageException(ioe);
+                }
+            } else if (e.getServerCode().equals(MantaErrorCode.BUCKET_NOT_FOUND_ERROR)) {
+                try {
+                    String bucketPath = pathOfBaseContainer(container);
+                    client.createBucket(bucketPath);
                     client.put(path, data, contentLength, headers, null);
                 } catch (IOException ioe) {
                     throw new StorageException(ioe);
@@ -334,16 +441,23 @@ public class MantaStorage extends NoneStorage {
     }
 
     @Override
-    public void deleteObject(final String container, final String object, final Config config) {
+    public void deleteObject(final String container, final String object,
+                             final Config config) {
         if (logging) {
-            logger.info("Performing DELETE at /{}/{}", container, object);
+            if ("buckets".equals(testType)) {
+                logger.info("Performing DELETE bucketobject at /{}/objects/{}",
+                        container, object);
+            } else {
+                logger.info("Performing DELETE at /{}/{}", container, object);
+            }
         }
 
         try {
             String path = pathOfObject(container, object);
             client.delete(path);
         } catch (MantaClientHttpResponseException e) {
-            if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
+            if (!e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)
+            || !e.getServerCode().equals(MantaErrorCode.OBJECT_NOT_FOUND_ERROR)) {
                 if (logging) {
                     logger.error("Error error deleting object", e);
                 }
@@ -366,7 +480,12 @@ public class MantaStorage extends NoneStorage {
 
             if (sections == 1) {
                 if (logging) {
-                    logger.info("Performing GET at /{}/{}", container, object);
+                    if ("buckets".equals(testType)) {
+                        logger.info("Performing GET bucketobject at /{}/objects/{}",
+                                container, object);
+                    } else {
+                        logger.info("Performing GET at /{}/{}", container, object);
+                    }
                 }
                 objectStream = client.getAsInputStream(path);
             } else if (objectSize != null) {
@@ -400,7 +519,12 @@ public class MantaStorage extends NoneStorage {
             final Map<String, String> map,
             final Config config) {
         if (logging) {
-            logger.info("Performing POST at /{}/{}", container, object);
+            if ("buckets".equals(testType)) {
+                logger.info("Performing POST at /{}/objects/{}",
+                        container, object);
+            } else {
+                logger.info("Performing POST at /{}/{}", container, object);
+            }
         }
 
         try {
@@ -423,9 +547,15 @@ public class MantaStorage extends NoneStorage {
     }
 
     @Override
-    protected Map<String, String> getMetadata(final String container, final String object, final Config config) {
+    protected Map<String, String> getMetadata(final String container,
+                                              final String object, final Config config) {
         if (logging) {
-            logger.info("Performing HEAD at /{}/{}", container, object);
+            if ("buckets".equals(testType)) {
+                logger.info("Performing HEAD at /{}/objects/{}",
+                        container, object);
+            } else {
+                logger.info("Performing HEAD at /{}/{}", container, object);
+            }
         }
 
         try {
@@ -460,24 +590,73 @@ public class MantaStorage extends NoneStorage {
     }
 
     /**
-     * Utility method that provides the directory mapping of a container.
+     * Utility method that provides the base path of bucket or dir container.
      *
      * @param container container name
-     * @return directory as string
+     * @return path of the directory or bucket as string
      */
-    private String directoryOfContainer(final String container) {
-        return String.format("%s/%s", currentTestDirectory, container);
+    private String pathOfBaseContainer(final String container) {
+        if ("buckets".equals(testType)) {
+            return String.format("%s%s", currentTestDirOrBucket,
+                    container.toLowerCase().replaceAll("[^a-zA-Z0-9]", ""));
+        } else {
+            return String.format("%s%s%s", currentTestDirOrBucket,
+                    MantaClient.SEPARATOR, container);
+        }
     }
 
     /**
-     * Utility method that provides the directory mapping of an object.
+     * Utility method that provides the directory or bucket mapping of an object.
      *
      * @param container container name
      * @param object object name
      * @return full path to object as string
      */
     private String pathOfObject(final String container, final String object) {
-        String dir = directoryOfContainer(container);
-        return String.format("%s/%s", dir, object);
+        if ("buckets".equals(testType)) {
+            String bucketPath = pathOfBaseContainer(container);
+            return String.format("%s%s%s%s", bucketPath,
+                    MantaClient.SEPARATOR,
+                    DEFAULT_BUCKETS_OBJECT,
+                    object.toLowerCase().replaceAll("[^a-zA-Z0-9]", ""));
+        } else {
+            String dir = pathOfBaseContainer(container);
+            return String.format("%s%s%s", dir, MantaClient.SEPARATOR, object);
+        }
+    }
+
+    /**
+     * Utility method that iterates through the contents of the bucket and deletes
+     * the objects in order to empty the bucket.
+     *
+     * @param container container name
+     * @throws IOException when object cannot be deleted
+     */
+    private void deleteObjectsInBucket(final String container) throws IOException {
+        String bucketIteratorPath = String.format("%s%s%s", pathOfBaseContainer(container),
+                MantaClient.SEPARATOR, DEFAULT_BUCKETS_OBJECT);
+        MantaBucketListingIterator itr =
+                client.streamingBucketIterator(bucketIteratorPath);
+        while (itr.hasNext()) {
+            Map<String, Object> next = itr.next();
+            if ("bucketobject".equals(Objects.toString(next.get("type")))) {
+                String objectPath = pathOfObject(container,
+                        Objects.toString(next.get("name")));
+                try {
+                    client.delete(objectPath);
+                } catch (MantaClientHttpResponseException e) {
+                    if (!e.getServerCode().equals(MantaErrorCode.OBJECT_NOT_FOUND_ERROR)
+                    || !e.getServerCode().equals(MantaErrorCode.RESOURCE_NOT_FOUND_ERROR)) {
+                        if (logging) {
+                            String msg = String.format("Bucket /%s is not empty. "
+                                            + "Error in attempting to delete object at %s",
+                                    container, objectPath);
+                            logger.error(msg, e);
+                        }
+                        throw new StorageException(e);
+                    }
+                }
+            }
+        }
     }
 }
