@@ -9,7 +9,7 @@ if [ ! -f $COSBENCH_MANTA_PATH ]; then
 	exit 1
 fi
 
-COSBENCH_IMAGE_TAG=${COSBENCH_IMAGE_TAG:-latest}
+COSBENCH_IMAGE_TAG=${COSBENCH_IMAGE_TAG:-java11-newclient}
 COSBENCH_DOCKERFILE=${COSBENCH_DOCKERFILE:-Dockerfile}
 
 docker build \

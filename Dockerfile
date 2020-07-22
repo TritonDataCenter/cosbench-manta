@@ -1,11 +1,12 @@
 # joyent/cosbench-manta
 
 # We use the Azul OpenJDK because it is a well tested and supported build.
-FROM azul/zulu-openjdk-debian:8
+FROM azul/zulu-openjdk-debian:11
 
 MAINTAINER Elijah Zupancic <elijah.zupancic@joyent.com>
+MAINTAINER Ashwin A Nair <ashwin.nair@joyent.com>
 
-ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
+ENV JAVA_HOME=/usr/lib/jvm/zulu-11-amd64
 ENV _JAVA_OPTIONS=-Dcom.twmacinta.util.MD5.NATIVE_LIB_FILE=/opt/cosbench/lib/arch/linux_amd64/MD5.so
 
 ENV COSBENCH_VERSION 0.4.2.c4
@@ -53,10 +54,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
            /var/tmp/*
 
 # Install cryptographic extensions
-RUN curl --retry 6 -Ls "http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip" > /tmp/ZuluJCEPolicies.zip && \
-    echo '8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  /tmp/ZuluJCEPolicies.zip' | sha256sum -c && \
-    unzip -o -j /tmp/ZuluJCEPolicies.zip ZuluJCEPolicies/local_policy.jar ZuluJCEPolicies/US_export_policy.jar -d $JAVA_HOME/jre/lib/security && \
-    rm /tmp/ZuluJCEPolicies.zip
+# RUN curl --retry 6 -Ls "http://cdn.azul.com/zcek/bin/ZuluJCEPolicies.zip" > /tmp/ZuluJCEPolicies.zip && \
+    # echo '8021a28b8cac41b44f1421fd210a0a0822fcaf88d62d2e70a35b2ff628a8675a  /tmp/ZuluJCEPolicies.zip' | sha256sum -c && \
+    # unzip -o -j /tmp/ZuluJCEPolicies.zip ZuluJCEPolicies/local_policy.jar ZuluJCEPolicies/US_export_policy.jar -d $JAVA_HOME/jre/lib/security && \
+    # rm /tmp/ZuluJCEPolicies.zip
 
 # Download and install Cosbench
 RUN curl --retry 6 -Ls "https://github.com/intel-cloud/cosbench/releases/download/v${COSBENCH_VERSION}/${COSBENCH_VERSION}.zip" > /tmp/cosbench.zip && \
@@ -94,10 +95,10 @@ RUN export CONTAINERPILOT_CHECKSUM=09158be44c3e887244581d4d019748df9fcfa93c \
     && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
     && rm /tmp/containerpilot.tar.gz
 
-ENV COSBENCH_MANTA_VERSION 1.1.1
+ENV COSBENCH_MANTA_VERSION 1.1.2
 
 ARG COSBENCH_MANTA_PATH=https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar
-ARG COSBENCH_MANTA_CHECKSUM=e40354da3d156fdc5792c3cbde84dcc9c48edb40b05e78a98d958926c1b0120f
+ARG COSBENCH_MANTA_CHECKSUM=43fe100bd48dc019179ae2c5bb6212efe36b4219807afc9217eeba2f0c4d8c8e
 
 # Download and install the Manta adaptor, allowing users to supply a path to the JAR and checksum through build args
 ADD $COSBENCH_MANTA_PATH  /tmp/

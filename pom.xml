@@ -31,6 +31,12 @@
             <organization>Joyent</organization>
             <organizationUrl>joyent.com</organizationUrl>
         </developer>
+        <developer>
+            <name>Ashwin A Nair</name>
+            <email>ashwin@nair.name</email>
+            <organization>Joyent</organization>
+            <organizationUrl>joyent.com</organizationUrl>
+        </developer>
     </developers>
 
     <scm>
@@ -55,7 +61,7 @@
     </distributionManagement>
 
     <properties>
-        <java.min.version>1.8</java.min.version>
+        <java.min.version>11</java.min.version>
         <maven.min.version>3.2</maven.min.version>
         <maven.test.skip>false</maven.test.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -84,7 +90,7 @@
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <!-- Dependency versions -->
         <dependency.checkstyle.version>8.31</dependency.checkstyle.version>
-        <dependency.java-manta.version>3.4.4-SNAPSHOT</dependency.java-manta.version>
+        <dependency.java-manta.version>3.5.1-SNAPSHOT</dependency.java-manta.version>
         <dependency.slf4j-log4j12.version>1.7.29</dependency.slf4j-log4j12.version>
         <dependency.osgi4.version>1.0</dependency.osgi4.version>
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
@@ -191,7 +197,7 @@
                         <!-- We intentionally don't include the JDK version here because
                              the version of OSGI in which COSBench is running doesn't have
                              a JDK 1.8 profile. -->
-                        <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE))"</Require-Capability>
+                        <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE-11))"</Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
