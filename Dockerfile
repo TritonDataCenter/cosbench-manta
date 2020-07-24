@@ -95,7 +95,7 @@ RUN export CONTAINERPILOT_CHECKSUM=09158be44c3e887244581d4d019748df9fcfa93c \
     && tar zxf /tmp/containerpilot.tar.gz -C /usr/local/bin \
     && rm /tmp/containerpilot.tar.gz
 
-ENV COSBENCH_MANTA_VERSION 1.1.2
+ENV COSBENCH_MANTA_VERSION 1.1.3
 
 ARG COSBENCH_MANTA_PATH=https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar
 ARG COSBENCH_MANTA_CHECKSUM=43fe100bd48dc019179ae2c5bb6212efe36b4219807afc9217eeba2f0c4d8c8e
