@@ -1,39 +1,44 @@
-cosbench-driver:
-    image: joyent/cosbench-manta:latest
+cosbench-java11-driver:
+    image: joyent/cosbench-manta:java11-newclient
     restart: always
-    mem_limit: 8g
+    mem_limit: 32g
     environment:
         - MODE=driver
         - CONSUL_AGENT=1
-        - JAVA_OPTS=-Xmx7500m
+        - JAVA_OPTS=-Xms28g -Xmx28g
         - LISTENING_PORT=18088
+        - MANTA_TLS_INSECURE=true
     env_file: _env
     expose:
         - 18088
     labels:
-        - triton.cns.services=cosbench-driver
+        - triton.cns.services=cosbench-java11-driver
+        - com.joyent.package=g4-highcpu-32G
+        - com.docker.swarm.affinities=["container!=~*cosbench-java11-driver*"]
 
-cosbench-controller:
-    image: joyent/cosbench-manta:latest
+cosbench-java11-controller:
+    image: joyent/cosbench-manta:java11-newclient
     restart: always
-    mem_limit: 4g
+    mem_limit: 16g
     environment:
         - MODE=controller
         - CONSUL_AGENT=1
-        - JAVA_OPTS=-Xmx3800m
+        - JAVA_OPTS=-Xms12g -Xmx12g
         - LISTENING_PORT=19088
     env_file: _env
     ports:
         - 19088:19088
     labels:
-        - triton.cns.services=cosbench-controller
+        - triton.cns.services=cosbench-java11-controller
+        - com.joyent.package=g4-highcpu-16G
+        - com.docker.swarm.affinities=["container!=~*cosbench-java11-driver*"]
 
 # Start with a single host which will bootstrap the cluster.
 # In production we'll want to use an HA cluster.
-consul:
+cosbench-java11-consul:
     image: consul:0.9.2
     restart: always
-    mem_limit: 128m
+    mem_limit: 512m
     expose:
       - 53
       - 8300
@@ -46,5 +51,7 @@ consul:
     dns:
        - 127.0.0.1
     labels:
-        - triton.cns.services=consul
+        - triton.cns.services=cosbench-java11-consul
+        - com.joyent.package=g4-highcpu-2G
+        - com.docker.swarm.affinities=["container!=~*cosbench-java11-driver*"]
     command: agent -server -client=0.0.0.0 -bootstrap -ui

@@ -69,24 +69,24 @@ check() {
     # make sure Docker client is pointed to the same place as the Triton client
     local docker_user=$(docker info 2>&1 | awk -F": " '/SDCAccount:/{print $2}')
     local docker_dc=$(echo $DOCKER_HOST | awk -F"/" '{print $3}' | awk -F'.' '{print $1}')
-    TRITON_USER=$(triton profile get | awk -F": " '/account:/{print $2}')
-    TRITON_DC=$(triton profile get | awk -F"/" '/url:/{print $3}' | awk -F'.' '{print $1}')
-    TRITON_ACCOUNT=$(triton account get | awk -F": " '/id:/{print $2}')
-    if [ ! "$docker_user" = "$TRITON_USER" ] || [ ! "$docker_dc" = "$TRITON_DC" ]; then
-        echo
-        tput rev  # reverse
-        tput bold # bold
-        echo 'Error! The Triton CLI configuration does not match the Docker CLI configuration.'
-        tput sgr0 # clear
-        echo
-        echo "Docker user: ${docker_user}"
-        echo "Triton user: ${TRITON_USER}"
-        echo "Docker data center: ${docker_dc}"
-        echo "Triton data center: ${TRITON_DC}"
-        exit 1
-    fi
+    TRITON_USER=$(triton -i profile get | awk -F": " '/account:/{print $2}')
+    TRITON_DC=$(triton -i profile get | awk -F"/" '/url:/{print $3}' | awk -F'.' '{print $1}')
+    TRITON_ACCOUNT=$(triton -i account get | awk -F": " '/id:/{print $2}')
+#    if [ ! "$docker_user" = "$TRITON_USER" ] || [ ! "$docker_dc" = "$TRITON_DC" ]; then
+#        echo
+#        tput rev  # reverse
+#        tput bold # bold
+#        echo 'Error! The Triton CLI configuration does not match the Docker CLI configuration.'
+#        tput sgr0 # clear
+#        echo
+#        echo "Docker user: ${docker_user}"
+#        echo "Triton user: ${TRITON_USER}"
+#        echo "Docker data center: ${docker_dc}"
+#        echo "Triton data center: ${TRITON_DC}"
+#        exit 1
+#    fi
 
-    local triton_cns_enabled=$(triton account get | awk -F": " '/cns/{print $2}')
+    local triton_cns_enabled=$(triton -i account get | awk -F": " '/cns/{print $2}')
     if [ ! "true" == "$triton_cns_enabled" ]; then
         echo
         tput rev  # reverse
@@ -98,9 +98,9 @@ check() {
     fi
 
     if [ -n "$(grep '^CONSUL=' _env)" ]; then
-       sed -i "s/CONSUL=.*/CONSUL=consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com/g" _env
+       sed -i "s/CONSUL=.*/CONSUL=cosbench-java11-consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.scloud.host/g" _env
     else
-       echo CONSUL=consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.joyent.com >> _env
+       echo CONSUL=cosbench-java11-consul.svc.${TRITON_ACCOUNT}.${TRITON_DC}.cns.scloud.host >> _env
     fi
 }
 
@@ -108,11 +108,14 @@ check() {
 # parse arguments
 
 while getopts "f:p:h" optchar; do
+    # shellcheck disable=SC2220
+    # shellcheck disable=SC2213
     case "${optchar}" in
         f) export COMPOSE_FILE=${OPTARG} ;;
         p) export COMPOSE_PROJECT_NAME=${OPTARG} ;;
     esac
 done
+# shellcheck disable=SC2046
 shift $(expr $OPTIND - 1 )
 
 until

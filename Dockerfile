@@ -98,7 +98,7 @@ RUN export CONTAINERPILOT_CHECKSUM=09158be44c3e887244581d4d019748df9fcfa93c \
 ENV COSBENCH_MANTA_VERSION 1.1.3
 
 ARG COSBENCH_MANTA_PATH=https://github.com/joyent/cosbench-manta/releases/download/cosbench-manta-${COSBENCH_MANTA_VERSION}/cosbench-manta-${COSBENCH_MANTA_VERSION}.jar
-ARG COSBENCH_MANTA_CHECKSUM=43fe100bd48dc019179ae2c5bb6212efe36b4219807afc9217eeba2f0c4d8c8e
+ARG COSBENCH_MANTA_CHECKSUM=331c5c667512482365babe1384973080c41e0c35fbd1af1d4bafb22c760fe2f5
 
 # Download and install the Manta adaptor, allowing users to supply a path to the JAR and checksum through build args
 ADD $COSBENCH_MANTA_PATH  /tmp/
