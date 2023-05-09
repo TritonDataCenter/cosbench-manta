@@ -94,7 +94,7 @@
         <dependency.slf4j-log4j12.version>1.7.29</dependency.slf4j-log4j12.version>
         <dependency.osgi4.version>1.0</dependency.osgi4.version>
         <dependency.cosbench.version>0.4.1.0</dependency.cosbench.version>
-        <dependency.testng.version>6.14.3</dependency.testng.version>
+        <dependency.testng.version>7.5.1</dependency.testng.version>
         <dependency.commons-lang.version>3.10</dependency.commons-lang.version>
         <dependency.commons-io.version>2.6</dependency.commons-io.version>
     </properties>
